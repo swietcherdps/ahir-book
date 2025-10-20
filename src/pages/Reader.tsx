@@ -120,8 +120,8 @@ export default function Reader() {
       
       canvas.height = viewport.height
       canvas.width = viewport.width
-      canvas.style.width = `100%`
-      canvas.style.height = `auto`
+      canvas.style.width = `${viewport.width}px`
+      canvas.style.height = `${viewport.height}px`
 
       const renderTask = page.render({
         canvasContext: context,
@@ -142,49 +142,47 @@ export default function Reader() {
       if (oldLayer) oldLayer.remove()
       
       if (keywords.length > 0 && contentRef.current) {
-      const textLayerDiv = document.createElement('div')
-      textLayerDiv.className = 'textLayer'
-      textLayerDiv.style.position = 'absolute'
-      textLayerDiv.style.left = '0'
-      textLayerDiv.style.top = '0'
-      textLayerDiv.style.width = `${viewport.width}px`
-      textLayerDiv.style.height = `${viewport.height}px`
-      textLayerDiv.style.transformOrigin = '0 0'
-      textLayerDiv.style.transform = `scale(${1 / (zoom * 1.5)})`
-      
-      contentRef.current.appendChild(textLayerDiv)
-      
-      textContent.items.forEach((item) => {
-        if ('str' in item && item.str && 'transform' in item) {
-          const normalizedText = normalizeTurkish(item.str.toLowerCase())
-          let matchedKeywordIndex = -1
-          
-          for (let i = 0; i < keywords.length; i++) {
-            if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
-              matchedKeywordIndex = i
-              break
+        const textLayerDiv = document.createElement('div')
+        textLayerDiv.className = 'textLayer'
+        textLayerDiv.style.position = 'absolute'
+        textLayerDiv.style.left = '0'
+        textLayerDiv.style.top = '0'
+        textLayerDiv.style.width = `${viewport.width}px`
+        textLayerDiv.style.height = `${viewport.height}px`
+        
+        contentRef.current.appendChild(textLayerDiv)
+        
+        textContent.items.forEach((item) => {
+          if ('str' in item && item.str && 'transform' in item) {
+            const normalizedText = normalizeTurkish(item.str.toLowerCase())
+            let matchedKeywordIndex = -1
+            
+            for (let i = 0; i < keywords.length; i++) {
+              if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
+                matchedKeywordIndex = i
+                break
+              }
+            }
+            
+            if (matchedKeywordIndex !== -1) {
+              const span = document.createElement('span')
+              span.textContent = item.str
+              span.style.position = 'absolute'
+              span.style.color = 'transparent'
+              span.style.backgroundColor = getHighlightColor(matchedKeywordIndex)
+              span.style.whiteSpace = 'pre'
+              
+              const tx = item.transform
+              span.style.left = `${tx[4]}px`
+              span.style.top = `${tx[5]}px`
+              span.style.fontSize = `${Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])}px`
+              span.style.transform = `scaleX(${tx[0] / Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])})`
+              span.style.transformOrigin = '0 0'
+              
+              textLayerDiv.appendChild(span)
             }
           }
-          
-          if (matchedKeywordIndex !== -1) {
-            const span = document.createElement('span')
-            span.textContent = item.str
-            span.style.position = 'absolute'
-            span.style.color = 'transparent'
-            span.style.backgroundColor = getHighlightColor(matchedKeywordIndex)
-            span.style.whiteSpace = 'pre'
-            
-            const tx = item.transform
-            span.style.left = `${tx[4]}px`
-            span.style.top = `${tx[5]}px`
-            span.style.fontSize = `${Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])}px`
-            span.style.transform = `scaleX(${tx[0] / Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])})`
-            span.style.transformOrigin = '0 0'
-            
-            textLayerDiv.appendChild(span)
-          }
-        }
-      })
+        })
       }
     } catch (error: unknown) {
       // Ignore cancellation errors

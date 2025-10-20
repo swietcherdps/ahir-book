@@ -51,8 +51,8 @@ export const highlightText = (text: string, keywords: string[]): string => {
   return highlightedText
 }
 
-// Extract snippet with context around matched keyword
-const extractSnippet = (text: string, keyword: string, contextLength = 100): string => {
+// Extract snippet with context around matched keyword (3 lines ~ 300 chars)
+const extractSnippet = (text: string, keyword: string, contextLength = 300): string => {
   const normalized = normalizeTurkish(text)
   const keywordNormalized = normalizeTurkish(keyword)
   const index = normalized.indexOf(keywordNormalized)
