@@ -168,19 +168,39 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Draw highlights directly on canvas for search keywords
+    // Render text layer for highlighting
     const textContent = await page.getTextContent()
     const searchQuery = searchParams.get('q') || ''
     const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     
+    // Remove old text layer if exists
+    const oldTextLayer = contentRef.current?.querySelector('.textLayer')
+    if (oldTextLayer) {
+      oldTextLayer.remove()
+    }
+    
     if (keywords.length > 0) {
-      // Draw highlight rectangles behind text
+      // Create text layer container
+      const textLayerDiv = document.createElement('div')
+      textLayerDiv.className = 'textLayer'
+      textLayerDiv.style.position = 'absolute'
+      textLayerDiv.style.left = '0'
+      textLayerDiv.style.top = '0'
+      textLayerDiv.style.width = canvas.style.width
+      textLayerDiv.style.height = canvas.style.height
+      textLayerDiv.style.overflow = 'hidden'
+      textLayerDiv.style.lineHeight = '1.0'
+      
+      contentRef.current?.appendChild(textLayerDiv)
+      
+      // Render each text item as a span
       textContent.items.forEach((item) => {
         if ('str' in item && item.str && 'transform' in item) {
-          // Check if this text matches any search keyword
-          const normalizedText = normalizeTurkish(item.str.toLowerCase())
-          let matchedKeywordIndex = -1
+          const text = item.str
+          const normalizedText = normalizeTurkish(text.toLowerCase())
           
+          // Check which keyword matches
+          let matchedKeywordIndex = -1
           for (let i = 0; i < keywords.length; i++) {
             if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
               matchedKeywordIndex = i
@@ -188,21 +208,30 @@ export default function Reader() {
             }
           }
           
+          // Only render if matched
           if (matchedKeywordIndex !== -1) {
-            // Get color for this keyword
+            const span = document.createElement('span')
+            span.textContent = text
+            span.style.position = 'absolute'
+            span.style.whiteSpace = 'pre'
+            span.style.transformOrigin = 'left bottom'
+            
+            // Get transform matrix
+            const tx = item.transform
+            const fontHeight = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])
+            
+            // Apply highlight color
             const color = getHighlightColor(matchedKeywordIndex)
+            span.style.backgroundColor = color
+            span.style.color = 'black'
             
-            // Extract position and size from transform matrix
-            const [a, b, , , tx, ty] = item.transform
-            const fontSize = Math.sqrt(a * a + b * b)
-            const textWidth = item.width || 0
+            // Position and scale
+            span.style.left = `${tx[4]}px`
+            span.style.top = `${tx[5]}px`
+            span.style.fontSize = `${fontHeight}px`
+            span.style.fontFamily = 'sans-serif'
             
-            // Draw highlight rectangle
-            context.save()
-            context.globalAlpha = 0.4 // Semi-transparent
-            context.fillStyle = color
-            context.fillRect(tx, viewport.height - ty, textWidth, fontSize)
-            context.restore()
+            textLayerDiv.appendChild(span)
           }
         }
       })
