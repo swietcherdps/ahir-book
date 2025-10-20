@@ -59,8 +59,11 @@ function AppContent() {
 }
 
 function App() {
+  // Use base path for GitHub Pages, empty for mobile apps
+  const basename = import.meta.env.BASE_URL
+  
   return (
-    <Router>
+    <Router basename={basename}>
       <AppContent />
     </Router>
   )
