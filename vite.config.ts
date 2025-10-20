@@ -14,12 +14,35 @@ export default defineConfig({
       },
       manifest: {
         name: 'Ahir Book',
-        short_name: 'AhirBook',
-        description: 'Offline-first PWA for PDF and EPUB books',
-        theme_color: '#3182CE',
+        short_name: 'Ahir',
+        description: 'Dijital kitap okuma ve arama uygulaması - Çınar ağacı gibi kök salmış bilgi',
+        theme_color: '#7D8B5C',
         background_color: '#F7FAFC',
         display: 'standalone',
-        icons: []
+        start_url: '/',
+        scope: '/',
+        orientation: 'portrait',
+        categories: ['books', 'education', 'productivity'],
+        icons: [
+          {
+            src: '/icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html}'],
