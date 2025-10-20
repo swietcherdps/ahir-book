@@ -168,53 +168,63 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Draw highlight rectangles directly on canvas like Ctrl+F
+    // Add invisible selectable text layer for Ctrl+F style search
     const textContent = await page.getTextContent()
     const searchQuery = searchParams.get('q') || ''
     const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     
-    if (keywords.length > 0) {
-      // Get canvas rendering context
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-      
-      // Draw highlight rectangles behind text
-      textContent.items.forEach((item) => {
-        if ('str' in item && item.str && 'transform' in item && 'width' in item && 'height' in item) {
-          const text = item.str
-          const normalizedText = normalizeTurkish(text.toLowerCase())
-          
-          // Check which keyword matches
-          let matchedKeywordIndex = -1
-          for (let i = 0; i < keywords.length; i++) {
-            if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
-              matchedKeywordIndex = i
-              break
-            }
-          }
-          
-          // Draw highlight rectangle if matched
-          if (matchedKeywordIndex !== -1) {
-            const color = getHighlightColor(matchedKeywordIndex)
-            const transform = item.transform
-            
-            // Extract position from transform: [scaleX, skewY, skewX, scaleY, translateX, translateY]
-            const x = transform[4]
-            const y = transform[5]
-            const width = item.width * Math.abs(transform[0]) // width * scaleX
-            const height = Math.abs(transform[3]) // scaleY gives font height
-            
-            // Draw semi-transparent highlight rectangle
-            ctx.save()
-            ctx.globalAlpha = 0.3
-            ctx.fillStyle = color
-            // Flip Y coordinate because PDF has origin at bottom-left
-            ctx.fillRect(x, viewport.height - y - height, width, height)
-            ctx.restore()
+    // Remove old text layer
+    const oldLayer = contentRef.current?.querySelector('.textLayer')
+    if (oldLayer) oldLayer.remove()
+    
+    // Create text layer
+    const textLayerDiv = document.createElement('div')
+    textLayerDiv.className = 'textLayer'
+    textLayerDiv.style.position = 'absolute'
+    textLayerDiv.style.left = '0'
+    textLayerDiv.style.top = '0'
+    textLayerDiv.style.right = '0'
+    textLayerDiv.style.bottom = '0'
+    textLayerDiv.style.overflow = 'hidden'
+    textLayerDiv.style.opacity = '1'
+    textLayerDiv.style.lineHeight = '1'
+    textLayerDiv.style.mixBlendMode = 'multiply'
+    
+    contentRef.current?.appendChild(textLayerDiv)
+    
+    // Render text with CSS transforms matching PDF coordinates
+    textContent.items.forEach((item) => {
+      if ('str' in item && item.str && 'transform' in item) {
+        const div = document.createElement('div')
+        div.textContent = item.str
+        div.style.position = 'absolute'
+        div.style.whiteSpace = 'pre'
+        div.style.transformOrigin = '0% 0%'
+        div.style.color = 'transparent' // Invisible text
+        
+        const tx = item.transform
+        const angle = Math.atan2(tx[1], tx[0])
+        const scaleX = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1])
+        const scaleY = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])
+        
+        div.style.left = `${tx[4]}px`
+        div.style.top = `${tx[5]}px`
+        div.style.fontSize = `${scaleY}px`
+        div.style.fontFamily = 'sans-serif'
+        div.style.transform = `scaleX(${scaleX / scaleY}) rotate(${angle}rad)`
+        
+        // Highlight if matches keyword
+        const normalized = normalizeTurkish(item.str.toLowerCase())
+        for (let i = 0; i < keywords.length; i++) {
+          if (normalized.includes(normalizeTurkish(keywords[i]))) {
+            div.style.backgroundColor = getHighlightColor(i)
+            break
           }
         }
-      })
-    }
+        
+        textLayerDiv.appendChild(div)
+      }
+    })
   }
 
   const renderEPUBPage = async () => {
