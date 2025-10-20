@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "group:App 2"
+      name = "App 2">
+      <FileRef
+         location = "group:Assets.xcassets">
+      </FileRef>
+      <Group
+         location = "group:Base.lproj"
+         name = "Base.lproj">
+         <FileRef
+            location = "group:LaunchScreen.storyboard">
+         </FileRef>
+         <FileRef
+            location = "group:Main.storyboard">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:config.xml">
+      </FileRef>
+      <Group
+         location = "group:public"
+         name = "public">
+         <FileRef
+            location = "group:icon-192x192.png">
+         </FileRef>
+         <FileRef
+            location = "group:favicon.ico">
+         </FileRef>
+         <FileRef
+            location = "group:index.html">
+         </FileRef>
+         <FileRef
+            location = "group:icon-384x384.png">
+         </FileRef>
+         <FileRef
+            location = "group:apple-touch-icon.png">
+         </FileRef>
+         <FileRef
+            location = "group:cordova.js">
+         </FileRef>
+         <FileRef
+            location = "group:icon-72x72.png">
+         </FileRef>
+         <FileRef
+            location = "group:icon-96x96.png">
+         </FileRef>
+         <FileRef
+            location = "group:icon-152x152.png">
+         </FileRef>
+         <FileRef
+            location = "group:vite.svg">
+         </FileRef>
+         <FileRef
+            location = "group:icon-1024x1024.png">
+         </FileRef>
+         <FileRef
+            location = "group:registerSW.js">
+         </FileRef>
+         <FileRef
+            location = "group:icon-512x512.png">
+         </FileRef>
+         <FileRef
+            location = "group:cordova_plugins.js">
+         </FileRef>
+         <FileRef
+            location = "group:manifest.webmanifest">
+         </FileRef>
+         <FileRef
+            location = "group:icon-144x144.png">
+         </FileRef>
+         <Group
+            location = "group:assets"
+            name = "assets">
+            <FileRef
+               location = "group:web-CAEJypR3.js">
+            </FileRef>
+            <FileRef
+               location = "group:index-DyW-bJoJ.js">
+            </FileRef>
+            <FileRef
+               location = "group:pdf.worker.min-qwK7q_zL.mjs">
+            </FileRef>
+            <FileRef
+               location = "group:index-DHD5WruP.css">
+            </FileRef>
+         </Group>
+         <FileRef
+            location = "group:sw.js">
+         </FileRef>
+         <FileRef
+            location = "group:icon-128x128.png">
+         </FileRef>
+         <FileRef
+            location = "group:workbox-6e150728.js">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:capacitor.config.json">
+      </FileRef>
+      <FileRef
+         location = "group:AppDelegate.swift">
+      </FileRef>
+      <FileRef
+         location = "group:Info.plist">
+      </FileRef>
+   </Group>
+</Workspace>
