@@ -1,9 +1,7 @@
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
-import { getBook, addBookmark, deleteBookmark, getBookmarks, type Book, type Bookmark } from '../lib/db'
-import * as pdfjsLib from 'pdfjs-dist'
-import ePub from 'epubjs'
-import { normalizeTurkish, getHighlightColor } from '../lib/search'
+import { useState, useEffect } from 'react'
+import { getBook, addBookmark, deleteBookmark, getBookmarks, db, type Book, type Bookmark } from '../lib/db'
+import { highlightText } from '../lib/search'
 
 export default function Reader() {
   const { bookId, pageId } = useParams()
@@ -19,10 +17,7 @@ export default function Reader() {
   const [showAIMenu, setShowAIMenu] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
   const [summary, setSummary] = useState('')
-  const contentRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const renderTaskRef = useRef<{ cancel: () => void; promise: Promise<void> } | null>(null)
-  const isRenderingRef = useRef(false)
+  const [pageText, setPageText] = useState('')
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -35,24 +30,11 @@ export default function Reader() {
 
   useEffect(() => {
     if (book) {
-      renderPage()
+      loadPageText()
       checkBookmark()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId, book, bookmarks])
-
-  // Cleanup render task on unmount
-  useEffect(() => {
-    return () => {
-      if (renderTaskRef.current) {
-        try {
-          renderTaskRef.current.cancel()
-        } catch {
-          // Ignore errors during cleanup
-        }
-      }
-    }
-  }, [])
 
   const loadBook = async () => {
     try {
@@ -82,168 +64,36 @@ export default function Reader() {
     setIsBookmarked(bookmarked)
   }
 
-  const renderPage = async () => {
-    if (!book || !contentRef.current) return
-
+  const loadPageText = async () => {
     try {
-      if (book.format === 'pdf') {
-        await renderPDFPage()
+      setLoading(true)
+      // Get page content from database
+      const content = await db.bookContent
+        .where('[bookId+pageNumber]')
+        .equals([currentBookId, currentPage])
+        .first()
+      
+      if (content) {
+        setPageText(content.contentText)
+        
+        // Get total pages for this book
+        const allPages = await db.bookContent
+          .where('bookId')
+          .equals(currentBookId)
+          .count()
+        setTotalPages(allPages)
       } else {
-        await renderEPUBPage()
+        setPageText('')
+        setError('Sayfa içeriği bulunamadı')
       }
     } catch (err) {
-      console.error('Page render error:', err)
-      setError('Sayfa görüntülenirken hata oluştu')
-    }
-  }
-
-  const renderPDFPage = async () => {
-    // Prevent concurrent renders
-    if (isRenderingRef.current) {
-      console.log('Render already in progress, skipping')
-      return
-    }
-
-    // Cancel any ongoing render task
-    if (renderTaskRef.current) {
-      try {
-        renderTaskRef.current.cancel()
-      } catch {
-        // Ignore cancellation errors
-      }
-      renderTaskRef.current = null
-    }
-
-    // Check if canvas is ready
-    if (!book || !canvasRef.current) {
-      console.warn('Canvas not ready for rendering')
-      return
-    }
-
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')
-    
-    if (!context) {
-      console.error('Cannot get 2D context from canvas')
-      return
-    }
-
-    // Set rendering flag
-    isRenderingRef.current = true
-
-    const arrayBuffer = await book.fileBlob.arrayBuffer()
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-    setTotalPages(pdf.numPages)
-
-    const page = await pdf.getPage(currentPage)
-    
-    // Use higher scale for better quality (HD)
-    const scale = window.devicePixelRatio * 1.5 // Responsive to screen DPI
-    const viewport = page.getViewport({ scale })
-    
-    canvas.height = viewport.height
-    canvas.width = viewport.width
-    canvas.style.width = `${viewport.width / window.devicePixelRatio}px`
-    canvas.style.height = `${viewport.height / window.devicePixelRatio}px`
-
-    // Create and store render task
-    const renderTask = page.render({
-      canvasContext: context,
-      viewport: viewport,
-      canvas: canvas
-    })
-    
-    renderTaskRef.current = renderTask
-
-    try {
-      await renderTask.promise
-    } catch (error: unknown) {
-      // Ignore cancellation errors, throw others
-      const err = error as { name?: string }
-      if (err?.name !== 'RenderingCancelledException') {
-        throw error
-      }
+      console.error('Page load error:', err)
+      setError('Sayfa yüklenirken hata oluştu')
     } finally {
-      // Clear rendering flag
-      isRenderingRef.current = false
+      setLoading(false)
     }
-
-    // Add invisible selectable text layer for Ctrl+F style search
-    const textContent = await page.getTextContent()
-    const searchQuery = searchParams.get('q') || ''
-    const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
-    
-    // Remove old text layer
-    const oldLayer = contentRef.current?.querySelector('.textLayer')
-    if (oldLayer) oldLayer.remove()
-    
-    // Create text layer
-    const textLayerDiv = document.createElement('div')
-    textLayerDiv.className = 'textLayer'
-    textLayerDiv.style.position = 'absolute'
-    textLayerDiv.style.left = '0'
-    textLayerDiv.style.top = '0'
-    textLayerDiv.style.right = '0'
-    textLayerDiv.style.bottom = '0'
-    textLayerDiv.style.overflow = 'hidden'
-    textLayerDiv.style.opacity = '1'
-    textLayerDiv.style.lineHeight = '1'
-    textLayerDiv.style.mixBlendMode = 'multiply'
-    
-    contentRef.current?.appendChild(textLayerDiv)
-    
-    // Render text with CSS transforms matching PDF coordinates
-    textContent.items.forEach((item) => {
-      if ('str' in item && item.str && 'transform' in item) {
-        const div = document.createElement('div')
-        div.textContent = item.str
-        div.style.position = 'absolute'
-        div.style.whiteSpace = 'pre'
-        div.style.transformOrigin = '0% 0%'
-        div.style.color = 'transparent' // Invisible text
-        
-        const tx = item.transform
-        const angle = Math.atan2(tx[1], tx[0])
-        const scaleX = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1])
-        const scaleY = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])
-        
-        div.style.left = `${tx[4]}px`
-        div.style.top = `${tx[5]}px`
-        div.style.fontSize = `${scaleY}px`
-        div.style.fontFamily = 'sans-serif'
-        div.style.transform = `scaleX(${scaleX / scaleY}) rotate(${angle}rad)`
-        
-        // Highlight if matches keyword
-        const normalized = normalizeTurkish(item.str.toLowerCase())
-        for (let i = 0; i < keywords.length; i++) {
-          if (normalized.includes(normalizeTurkish(keywords[i]))) {
-            div.style.backgroundColor = getHighlightColor(i)
-            break
-          }
-        }
-        
-        textLayerDiv.appendChild(div)
-      }
-    })
   }
 
-  const renderEPUBPage = async () => {
-    if (!book || !contentRef.current) return
-
-    const arrayBuffer = await book.fileBlob.arrayBuffer()
-    const epubBook = ePub(arrayBuffer)
-    await epubBook.ready
-
-    const spine = await epubBook.loaded.spine as { items?: Array<{ href: string }> }
-    setTotalPages(spine.items?.length || 0)
-
-    const rendition = epubBook.renderTo(contentRef.current, {
-      width: '100%',
-      height: 600
-    })
-
-    await rendition.display(currentPage - 1)
-  }
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -381,16 +231,18 @@ export default function Reader() {
         </header>
 
         <div 
-          ref={contentRef}
-          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px] relative overflow-hidden"
+          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px]"
           onMouseUp={handleTextSelection}
-          style={{ position: 'relative' }}
         >
-          {book.format === 'pdf' ? (
-            <canvas ref={canvasRef} className="w-full" />
-          ) : (
-            <div className="epub-content" />
-          )}
+          <div 
+            className="prose max-w-none leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: highlightText(
+                pageText,
+                searchParams.get('q')?.split(',').map(k => k.trim()).filter(Boolean) || []
+              )
+            }}
+          />
         </div>
 
         {showAIMenu && (
