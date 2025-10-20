@@ -134,10 +134,15 @@ export default function Reader() {
     setTotalPages(pdf.numPages)
 
     const page = await pdf.getPage(currentPage)
-    const viewport = page.getViewport({ scale: 1.5 })
+    
+    // Use higher scale for better quality (HD)
+    const scale = window.devicePixelRatio * 1.5 // Responsive to screen DPI
+    const viewport = page.getViewport({ scale })
     
     canvas.height = viewport.height
     canvas.width = viewport.width
+    canvas.style.width = `${viewport.width / window.devicePixelRatio}px`
+    canvas.style.height = `${viewport.height / window.devicePixelRatio}px`
 
     // Create and store render task
     const renderTask = page.render({
@@ -161,14 +166,42 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Extract text for selection
+    // Render text layer for selection
     const textContent = await page.getTextContent()
-    const text = textContent.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
     
-    if (contentRef.current) {
-      contentRef.current.setAttribute('data-text', text)
+    // Create text layer div if it doesn't exist
+    let textLayerDiv = contentRef.current?.querySelector('.textLayer') as HTMLDivElement
+    if (!textLayerDiv && contentRef.current) {
+      textLayerDiv = document.createElement('div')
+      textLayerDiv.className = 'textLayer'
+      textLayerDiv.style.position = 'absolute'
+      textLayerDiv.style.left = '0'
+      textLayerDiv.style.top = '0'
+      textLayerDiv.style.right = '0'
+      textLayerDiv.style.bottom = '0'
+      textLayerDiv.style.overflow = 'hidden'
+      textLayerDiv.style.opacity = '0.2'
+      textLayerDiv.style.lineHeight = '1.0'
+      contentRef.current.appendChild(textLayerDiv)
+    }
+    
+    if (textLayerDiv) {
+      // Clear previous text layer
+      textLayerDiv.innerHTML = ''
+      
+      // Render text items
+      textContent.items.forEach((item: { str?: string; transform: number[] }) => {
+        if ('str' in item && item.str) {
+          const div = document.createElement('div')
+          div.textContent = item.str
+          div.style.position = 'absolute'
+          div.style.whiteSpace = 'pre'
+          div.style.transform = `matrix(${item.transform.join(',')})`
+          div.style.transformOrigin = '0% 0%'
+          div.style.fontSize = `${Math.sqrt(item.transform[0] * item.transform[0] + item.transform[1] * item.transform[1])}px`
+          textLayerDiv.appendChild(div)
+        }
+      })
     }
   }
 
@@ -327,8 +360,9 @@ export default function Reader() {
 
         <div 
           ref={contentRef}
-          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px] relative"
+          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px] relative overflow-hidden"
           onMouseUp={handleTextSelection}
+          style={{ position: 'relative' }}
         >
           {book.format === 'pdf' ? (
             <canvas ref={canvasRef} className="w-full" />

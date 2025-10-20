@@ -14,4 +14,13 @@
   [dir="rtl"] {
     direction: rtl;
   }
+  
+  mark {
+    @apply bg-highlight;
+    padding: 2px 0;
+  }
+  
+  .bg-highlight {
+    background-color: #FBBF24 !important;
+  }
 }

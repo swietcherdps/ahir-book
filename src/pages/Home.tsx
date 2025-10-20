@@ -4,17 +4,39 @@ import { searchBooks, type SearchResult } from '../lib/search'
 
 export default function Home() {
   const [query, setQuery] = useState('')
+  const [keywords, setKeywords] = useState<string[]>([])
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
 
+  const handleKeywordInput = (value: string) => {
+    // Split by comma and parse keywords
+    const parts = value.split(',')
+    const lastPart = parts[parts.length - 1].trim()
+    
+    if (parts.length > 1) {
+      // Add previous keywords as tags
+      const newKeywords = parts.slice(0, -1).map(k => k.trim()).filter(Boolean)
+      setKeywords([...keywords, ...newKeywords])
+      setQuery(lastPart)
+    } else {
+      setQuery(value)
+    }
+  }
+
+  const removeKeyword = (index: number) => {
+    setKeywords(keywords.filter((_, i) => i !== index))
+  }
+
   const handleSearch = async () => {
-    if (!query.trim()) return
+    const allKeywords = [...keywords, ...query.split(',').map(k => k.trim()).filter(Boolean)]
+    if (allKeywords.length === 0) return
     
     setLoading(true)
     setSearched(true)
     try {
-      const searchResults = await searchBooks(query, 5)
+      const searchQuery = allKeywords.join(',')
+      const searchResults = await searchBooks(searchQuery, 5)
       setResults(searchResults)
     } catch (error) {
       console.error('Search error:', error)
@@ -42,17 +64,34 @@ export default function Home() {
         </header>
 
         <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {keywords.map((keyword, index) => (
+              <div
+                key={index}
+                className="bg-accent text-white px-3 py-1 rounded-full flex items-center gap-2 text-sm"
+              >
+                <span>{keyword}</span>
+                <button
+                  onClick={() => removeKeyword(index)}
+                  className="hover:opacity-75 transition"
+                  title="Etiketi kaldır"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleKeywordInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Virgülle ayrılmış kelimeler ile ara..."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
           />
           <button
             onClick={handleSearch}
-            disabled={loading}
+            disabled={loading || (keywords.length === 0 && query.trim() === '')}
             className="w-full bg-accent text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
           >
             {loading ? 'Aranıyor...' : 'Arama'}
