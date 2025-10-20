@@ -3,11 +3,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  // Use /ahir-book/ only for web production (GitHub Pages)
-  // Use / for development and mobile builds
-  // Check CAPACITOR env variable for mobile builds
-  base: mode === 'production' && !process.env.CAPACITOR ? '/ahir-book/' : '/',
+export default defineConfig(() => ({
+  // Use / for all builds since repo is now username.github.io
+  base: '/',
   plugins: [
     react(),
     VitePWA({
