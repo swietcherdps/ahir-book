@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { searchBooks, type SearchResult } from '../lib/search'
 import Navigation from '../components/Navigation'
@@ -9,6 +9,22 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastResultRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading) return
+    if (observer.current) observer.current.disconnect()
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1)
+      }
+    })
+    
+    if (node) observer.current.observe(node)
+  }, [loading, hasMore])
 
   // Restore search state from session storage on mount
   useEffect(() => {
@@ -52,26 +68,50 @@ export default function Home() {
     setKeywords(keywords.filter((_, i) => i !== index))
   }
 
-  const handleSearch = async () => {
+  const handleSearch = async (isLoadMore = false) => {
     const allKeywords = [...keywords, ...query.split(',').map(k => k.trim()).filter(Boolean)]
     if (allKeywords.length === 0) return
     
     setLoading(true)
-    setSearched(true)
+    if (!isLoadMore) {
+      setSearched(true)
+      setPage(1)
+      setHasMore(true)
+    }
+    
     try {
       const searchQuery = allKeywords.join(',')
-      const searchResults = await searchBooks(searchQuery, 5)
-      setResults(searchResults)
+      const offset = isLoadMore ? (page - 1) * 10 : 0
+      const searchResults = await searchBooks(searchQuery, 10, offset)
+      
+      if (isLoadMore) {
+        setResults(prev => [...prev, ...searchResults])
+      } else {
+        setResults(searchResults)
+      }
+      
+      // If we got less than 10 results, we've reached the end
+      if (searchResults.length < 10) {
+        setHasMore(false)
+      }
     } catch (error) {
       console.error('Search error:', error)
     } finally {
       setLoading(false)
     }
   }
+  
+  // Load more when page changes
+  useEffect(() => {
+    if (page > 1 && searched) {
+      handleSearch(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch()
+      handleSearch(false)
     }
   }
 
@@ -111,7 +151,7 @@ export default function Home() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
           />
           <button
-            onClick={handleSearch}
+            onClick={() => handleSearch(false)}
             disabled={loading || (keywords.length === 0 && query.trim() === '')}
             className="w-full bg-accent text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
           >
@@ -133,8 +173,12 @@ export default function Home() {
           ) : (
             <>
               <div className="space-y-3">
-                {results.map((result) => (
-                  <div key={result.id} className="bg-white p-4 rounded-lg shadow-md">
+                {results.map((result, index) => (
+                  <div 
+                    key={result.id} 
+                    ref={index === results.length - 1 ? lastResultRef : null}
+                    className="bg-white p-4 rounded-lg shadow-md"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-primary">{result.bookTitle}</h3>
                       <span className="text-sm text-gray-500">Sayfa {result.pageNumber}</span>
@@ -154,13 +198,15 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              {results.length >= 5 && (
-                <Link
-                  to={`/search-results?q=${encodeURIComponent(query)}`}
-                  className="block text-center py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
-                  Daha Fazla Göster
-                </Link>
+              
+              {loading && page > 1 && (
+                <div className="flex justify-center py-4">
+                  <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              
+              {!hasMore && results.length > 0 && (
+                <p className="text-center text-gray-500 py-4">Tüm sonuçlar gösterildi</p>
               )}
             </>
           )}

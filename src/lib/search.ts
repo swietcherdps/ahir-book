@@ -130,8 +130,12 @@ export const searchWithPagination = async (
   pageSize = 10
 ): Promise<{ results: SearchResult[]; hasMore: boolean; total: number }> => {
   const offset = (page - 1) * pageSize
+  
+  // Get all results to calculate total
   const allResults = await searchBooks(searchQuery)
   const total = allResults.length
+  
+  // Get paginated results
   const results = allResults.slice(offset, offset + pageSize)
   const hasMore = offset + pageSize < total
   
