@@ -63,13 +63,31 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
+      
+      // Preserve layout by tracking Y positions for line breaks
+      let lastY = -1
       const text = textContent.items
-        .map((item) => ('str' in item ? item.str : ''))
-        .join(' ')
+        .map((item, index) => {
+          if (!('str' in item) || !('transform' in item)) return ''
+          
+          const currentY = item.transform[5]
+          const str = item.str
+          
+          // Add line break if Y position changed significantly (new line)
+          if (lastY !== -1 && Math.abs(currentY - lastY) > 5) {
+            lastY = currentY
+            return '\n' + str
+          }
+          
+          lastY = currentY
+          // Add space between words on same line
+          return (index > 0 ? ' ' : '') + str
+        })
+        .join('')
       
       pages.push({
         pageNumber: i,
-        text
+        text: text.trim()
       })
     }
     

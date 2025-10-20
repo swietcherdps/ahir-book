@@ -230,19 +230,29 @@ export default function Reader() {
           </button>
         </header>
 
-        <div 
-          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px]"
-          onMouseUp={handleTextSelection}
-        >
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Page number header */}
+          <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+            <span className="text-sm text-gray-600">Sayfa {currentPage}</span>
+            <span className="text-sm text-gray-500">{book.title}</span>
+          </div>
+          
+          {/* Page content */}
           <div 
-            className="prose max-w-none leading-relaxed whitespace-pre-wrap"
-            dangerouslySetInnerHTML={{
-              __html: highlightText(
-                pageText,
-                searchParams.get('q')?.split(',').map(k => k.trim()).filter(Boolean) || []
-              )
-            }}
-          />
+            className="p-8 min-h-[600px]"
+            onMouseUp={handleTextSelection}
+          >
+            <div 
+              className="font-serif text-base leading-relaxed whitespace-pre-wrap break-words"
+              style={{ fontFamily: 'Georgia, serif', lineHeight: '1.8' }}
+              dangerouslySetInnerHTML={{
+                __html: highlightText(
+                  pageText,
+                  searchParams.get('q')?.split(',').map(k => k.trim()).filter(Boolean) || []
+                )
+              }}
+            />
+          </div>
         </div>
 
         {showAIMenu && (
