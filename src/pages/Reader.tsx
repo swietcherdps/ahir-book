@@ -22,6 +22,8 @@ export default function Reader() {
   const [zoom, setZoom] = useState(1.0)
   const contentRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const renderTaskRef = useRef<{ cancel: () => void } | null>(null)
+  const isRenderingRef = useRef(false)
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -85,39 +87,61 @@ export default function Reader() {
 
   const renderPDFPage = async () => {
     if (!book || !canvasRef.current || !contentRef.current) return
+    
+    // Prevent concurrent renders
+    if (isRenderingRef.current) {
+      console.log('Render already in progress, skipping')
+      return
+    }
+    
+    // Cancel any ongoing render task
+    if (renderTaskRef.current) {
+      try {
+        renderTaskRef.current.cancel()
+      } catch {
+        // Ignore cancellation errors
+      }
+      renderTaskRef.current = null
+    }
 
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
     if (!context) return
-
-    const arrayBuffer = await book.fileBlob.arrayBuffer()
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-    setTotalPages(pdf.numPages)
-
-    const page = await pdf.getPage(currentPage)
-    const viewport = page.getViewport({ scale: zoom * 1.5 })
     
-    canvas.height = viewport.height
-    canvas.width = viewport.width
-    canvas.style.width = `100%`
-    canvas.style.height = `auto`
+    isRenderingRef.current = true
 
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-      canvas: canvas
-    }).promise
+    try {
+      const arrayBuffer = await book.fileBlob.arrayBuffer()
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      setTotalPages(pdf.numPages)
 
-    // Render text layer for search highlights
-    const textContent = await page.getTextContent()
-    const searchQuery = searchParams.get('q') || ''
-    const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
-    
-    // Remove old text layer
-    const oldLayer = contentRef.current?.querySelector('.textLayer')
-    if (oldLayer) oldLayer.remove()
-    
-    if (keywords.length > 0) {
+      const page = await pdf.getPage(currentPage)
+      const viewport = page.getViewport({ scale: zoom * 1.5 })
+      
+      canvas.height = viewport.height
+      canvas.width = viewport.width
+      canvas.style.width = `100%`
+      canvas.style.height = `auto`
+
+      const renderTask = page.render({
+        canvasContext: context,
+        viewport: viewport,
+        canvas: canvas
+      })
+      
+      renderTaskRef.current = renderTask
+      await renderTask.promise
+
+      // Render text layer for search highlights
+      const textContent = await page.getTextContent()
+      const searchQuery = searchParams.get('q') || ''
+      const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
+      
+      // Remove old text layer
+      const oldLayer = contentRef.current?.querySelector('.textLayer')
+      if (oldLayer) oldLayer.remove()
+      
+      if (keywords.length > 0 && contentRef.current) {
       const textLayerDiv = document.createElement('div')
       textLayerDiv.className = 'textLayer'
       textLayerDiv.style.position = 'absolute'
@@ -161,6 +185,16 @@ export default function Reader() {
           }
         }
       })
+      }
+    } catch (error: unknown) {
+      // Ignore cancellation errors
+      const err = error as { name?: string }
+      if (err?.name !== 'RenderingCancelledException') {
+        throw error
+      }
+    } finally {
+      isRenderingRef.current = false
+      renderTaskRef.current = null
     }
   }
 
