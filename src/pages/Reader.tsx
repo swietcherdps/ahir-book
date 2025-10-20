@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { getBook, addBookmark, deleteBookmark, getBookmarks, type Book, type Bookmark } from '../lib/db'
 import * as pdfjsLib from 'pdfjs-dist'
 import ePub from 'epubjs'
-import { normalizeTurkish } from '../lib/search'
+import { normalizeTurkish, getHighlightColor } from '../lib/search'
 
 export default function Reader() {
   const { bookId, pageId } = useParams()
@@ -205,18 +205,27 @@ export default function Reader() {
           div.style.whiteSpace = 'pre'
           div.style.userSelect = 'text'
           div.style.color = 'transparent' // Make text invisible
-          div.textContent = item.str
           
-          // Check if this text matches any search keyword
+          // Check if this text matches any search keyword and get the color
           const normalizedText = normalizeTurkish(item.str.toLowerCase())
-          const hasMatch = keywords.some(keyword => normalizedText.includes(normalizeTurkish(keyword)))
+          let matchedKeywordIndex = -1
           
-          if (hasMatch && keywords.length > 0) {
-            // Highlight background only - text stays invisible
-            div.style.backgroundColor = '#FBBF24'
+          for (let i = 0; i < keywords.length; i++) {
+            if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
+              matchedKeywordIndex = i
+              break
+            }
+          }
+          
+          if (matchedKeywordIndex !== -1) {
+            // Highlight background with color based on keyword index
+            const color = getHighlightColor(matchedKeywordIndex)
+            div.style.backgroundColor = color
             div.style.padding = '2px 4px'
             div.style.borderRadius = '2px'
           }
+          
+          div.textContent = item.str
           
           // Apply transform with proper scaling
           const [a, b, c, d, e, f] = item.transform

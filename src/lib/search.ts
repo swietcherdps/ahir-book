@@ -18,14 +18,34 @@ export const normalizeTurkish = (text: string): string => {
     .replace(/I/g, 'ı')
 }
 
-// Highlight matched terms in text
+// Color palette for multi-keyword highlighting
+const HIGHLIGHT_COLORS = [
+  '#FBBF24', // yellow
+  '#34D399', // green
+  '#60A5FA', // blue
+  '#F87171', // red
+  '#A78BFA', // purple
+  '#FB923C', // orange
+  '#EC4899', // pink
+  '#14B8A6', // teal
+]
+
+export const getHighlightColor = (index: number): string => {
+  return HIGHLIGHT_COLORS[index % HIGHLIGHT_COLORS.length]
+}
+
+// Highlight matched terms in text with different colors per keyword
 export const highlightText = (text: string, keywords: string[]): string => {
   let highlightedText = text
   
-  keywords.forEach(keyword => {
+  keywords.forEach((keyword, index) => {
     const normalized = normalizeTurkish(keyword)
+    const color = getHighlightColor(index)
     const regex = new RegExp(`(${normalized})`, 'gi')
-    highlightedText = highlightedText.replace(regex, '<mark class="bg-highlight">$1</mark>')
+    highlightedText = highlightedText.replace(
+      regex, 
+      `<mark style="background-color: ${color}; padding: 2px 4px; border-radius: 2px;">$1</mark>`
+    )
   })
   
   return highlightedText
