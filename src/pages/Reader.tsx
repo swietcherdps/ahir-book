@@ -180,8 +180,9 @@ export default function Reader() {
       textLayerDiv.style.right = '0'
       textLayerDiv.style.bottom = '0'
       textLayerDiv.style.overflow = 'hidden'
-      textLayerDiv.style.opacity = '0.2'
+      textLayerDiv.style.opacity = '0' // Completely transparent
       textLayerDiv.style.lineHeight = '1.0'
+      textLayerDiv.style.pointerEvents = 'auto' // Allow text selection
       contentRef.current.appendChild(textLayerDiv)
     }
     
@@ -189,16 +190,23 @@ export default function Reader() {
       // Clear previous text layer
       textLayerDiv.innerHTML = ''
       
-      // Render text items
-      textContent.items.forEach((item: { str?: string; transform: number[] }) => {
-        if ('str' in item && item.str) {
+      // Render text items with proper scaling
+      const scale = window.devicePixelRatio * 1.5
+      textContent.items.forEach((item) => {
+        if ('str' in item && item.str && 'transform' in item) {
           const div = document.createElement('div')
           div.textContent = item.str
           div.style.position = 'absolute'
           div.style.whiteSpace = 'pre'
-          div.style.transform = `matrix(${item.transform.join(',')})`
+          div.style.color = 'transparent' // Make text invisible but selectable
+          div.style.userSelect = 'text'
+          
+          // Apply transform with proper scaling
+          const [a, b, c, d, e, f] = item.transform
+          div.style.transform = `matrix(${a / scale}, ${b / scale}, ${c / scale}, ${d / scale}, ${e / scale}, ${f / scale})`
           div.style.transformOrigin = '0% 0%'
-          div.style.fontSize = `${Math.sqrt(item.transform[0] * item.transform[0] + item.transform[1] * item.transform[1])}px`
+          div.style.fontSize = `${Math.sqrt(a * a + b * b) / scale}px`
+          
           textLayerDiv.appendChild(div)
         }
       })
