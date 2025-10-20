@@ -1,9 +1,7 @@
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
-import { getBook, addBookmark, deleteBookmark, getBookmarks, type Book, type Bookmark } from '../lib/db'
-import * as pdfjsLib from 'pdfjs-dist'
-import ePub from 'epubjs'
-import { normalizeTurkish, getHighlightColor } from '../lib/search'
+import { useState, useEffect } from 'react'
+import { getBook, addBookmark, deleteBookmark, getBookmarks, db, type Book, type Bookmark } from '../lib/db'
+import { highlightText } from '../lib/search'
 
 export default function Reader() {
   const { bookId, pageId } = useParams()
@@ -19,11 +17,7 @@ export default function Reader() {
   const [showAIMenu, setShowAIMenu] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
   const [summary, setSummary] = useState('')
-  const [zoom, setZoom] = useState(1.0)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const renderTaskRef = useRef<{ cancel: () => void } | null>(null)
-  const isRenderingRef = useRef(false)
+  const [pageText, setPageText] = useState('')
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -36,11 +30,11 @@ export default function Reader() {
 
   useEffect(() => {
     if (book) {
-      renderPage()
+      loadPageText()
       checkBookmark()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageId, book, bookmarks, zoom])
+  }, [pageId, book, bookmarks])
 
   const loadBook = async () => {
     try {
@@ -70,148 +64,34 @@ export default function Reader() {
     setIsBookmarked(bookmarked)
   }
 
-  const renderPage = async () => {
-    if (!book || !contentRef.current) return
-
+  const loadPageText = async () => {
     try {
-      if (book.format === 'pdf') {
-        await renderPDFPage()
+      setLoading(true)
+      // Get page content from database
+      const content = await db.bookContent
+        .where('[bookId+pageNumber]')
+        .equals([currentBookId, currentPage])
+        .first()
+      
+      if (content) {
+        setPageText(content.contentText)
+        
+        // Get total pages for this book
+        const allPages = await db.bookContent
+          .where('bookId')
+          .equals(currentBookId)
+          .count()
+        setTotalPages(allPages)
       } else {
-        await renderEPUBPage()
+        setPageText('')
+        setError('Sayfa içeriği bulunamadı')
       }
     } catch (err) {
-      console.error('Page render error:', err)
-      setError('Sayfa görüntülenirken hata oluştu')
-    }
-  }
-
-  const renderPDFPage = async () => {
-    if (!book || !canvasRef.current || !contentRef.current) return
-    
-    // Prevent concurrent renders
-    if (isRenderingRef.current) {
-      console.log('Render already in progress, skipping')
-      return
-    }
-    
-    // Cancel any ongoing render task
-    if (renderTaskRef.current) {
-      try {
-        renderTaskRef.current.cancel()
-      } catch {
-        // Ignore cancellation errors
-      }
-      renderTaskRef.current = null
-    }
-
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')
-    if (!context) return
-    
-    isRenderingRef.current = true
-
-    try {
-      const arrayBuffer = await book.fileBlob.arrayBuffer()
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-      setTotalPages(pdf.numPages)
-
-      const page = await pdf.getPage(currentPage)
-      const viewport = page.getViewport({ scale: zoom * 1.5 })
-      
-      canvas.height = viewport.height
-      canvas.width = viewport.width
-      canvas.style.width = `${viewport.width}px`
-      canvas.style.height = `${viewport.height}px`
-
-      const renderTask = page.render({
-        canvasContext: context,
-        viewport: viewport,
-        canvas: canvas
-      })
-      
-      renderTaskRef.current = renderTask
-      await renderTask.promise
-
-      // Render text layer for search highlights
-      const textContent = await page.getTextContent()
-      const searchQuery = searchParams.get('q') || ''
-      const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
-      
-      // Remove old text layer
-      const oldLayer = contentRef.current?.querySelector('.textLayer')
-      if (oldLayer) oldLayer.remove()
-      
-      if (keywords.length > 0 && contentRef.current) {
-        const textLayerDiv = document.createElement('div')
-        textLayerDiv.className = 'textLayer'
-        textLayerDiv.style.position = 'absolute'
-        textLayerDiv.style.left = '0'
-        textLayerDiv.style.top = '0'
-        textLayerDiv.style.width = `${viewport.width}px`
-        textLayerDiv.style.height = `${viewport.height}px`
-        
-        contentRef.current.appendChild(textLayerDiv)
-        
-        textContent.items.forEach((item) => {
-          if ('str' in item && item.str && 'transform' in item) {
-            const normalizedText = normalizeTurkish(item.str.toLowerCase())
-            let matchedKeywordIndex = -1
-            
-            for (let i = 0; i < keywords.length; i++) {
-              if (normalizedText.includes(normalizeTurkish(keywords[i]))) {
-                matchedKeywordIndex = i
-                break
-              }
-            }
-            
-            if (matchedKeywordIndex !== -1) {
-              const span = document.createElement('span')
-              span.textContent = item.str
-              span.style.position = 'absolute'
-              span.style.color = 'transparent'
-              span.style.backgroundColor = getHighlightColor(matchedKeywordIndex)
-              span.style.whiteSpace = 'pre'
-              
-              const tx = item.transform
-              span.style.left = `${tx[4]}px`
-              span.style.top = `${tx[5]}px`
-              span.style.fontSize = `${Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])}px`
-              span.style.transform = `scaleX(${tx[0] / Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])})`
-              span.style.transformOrigin = '0 0'
-              
-              textLayerDiv.appendChild(span)
-            }
-          }
-        })
-      }
-    } catch (error: unknown) {
-      // Ignore cancellation errors
-      const err = error as { name?: string }
-      if (err?.name !== 'RenderingCancelledException') {
-        throw error
-      }
+      console.error('Page load error:', err)
+      setError('Sayfa yüklenirken hata oluştu')
     } finally {
-      isRenderingRef.current = false
-      renderTaskRef.current = null
+      setLoading(false)
     }
-  }
-
-  const renderEPUBPage = async () => {
-    if (!book || !contentRef.current) return
-
-    const arrayBuffer = await book.fileBlob.arrayBuffer()
-    const epubBook = ePub(arrayBuffer)
-    await epubBook.ready
-
-    const spine = await epubBook.loaded.spine as { items?: Array<{ href: string }> }
-    setTotalPages(spine.items?.length || 0)
-
-    const rendition = epubBook.renderTo(contentRef.current, {
-      width: '100%',
-      height: 600
-    })
-
-    await rendition.display(currentPage - 1)
   }
 
 
@@ -350,32 +230,19 @@ export default function Reader() {
           </button>
         </header>
 
-        <div className="mb-4 flex justify-center gap-2">
-          <button
-            onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
-            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-600"
-          >
-            🔍- Zoom Out
-          </button>
-          <span className="px-4 py-2 bg-gray-100 rounded-lg">{Math.round(zoom * 100)}%</span>
-          <button
-            onClick={() => setZoom(z => Math.min(3.0, z + 0.25))}
-            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-600"
-          >
-            🔍+ Zoom In
-          </button>
-        </div>
-
         <div 
-          ref={contentRef}
-          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px] relative overflow-auto"
+          className="bg-white rounded-lg shadow-lg p-8 min-h-[600px]"
           onMouseUp={handleTextSelection}
         >
-          {book.format === 'pdf' ? (
-            <canvas ref={canvasRef} className="w-full" />
-          ) : (
-            <div className="epub-content" />
-          )}
+          <div 
+            className="prose max-w-none leading-relaxed whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{
+              __html: highlightText(
+                pageText,
+                searchParams.get('q')?.split(',').map(k => k.trim()).filter(Boolean) || []
+              )
+            }}
+          />
         </div>
 
         {showAIMenu && (
