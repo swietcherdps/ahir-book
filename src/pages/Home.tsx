@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { searchBooks, type SearchResult } from '../lib/search'
+import { searchBooks, type SearchResult, type SortOrder } from '../lib/search'
+import { getBooks, type Book } from '../lib/db'
 import Navigation from '../components/Navigation'
 
 export default function Home() {
@@ -12,6 +13,12 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const loadingMoreRef = useRef(false)
+  
+  // Filter states
+  const [availableBooks, setAvailableBooks] = useState<Book[]>([])
+  const [selectedBookIds, setSelectedBookIds] = useState<number[]>([])
+  const [sortOrder, setSortOrder] = useState<SortOrder>('grouped')
+  const [showFilters, setShowFilters] = useState(false)
   
   const observer = useRef<IntersectionObserver | null>(null)
   const lastResultRef = useCallback((node: HTMLDivElement | null) => {
@@ -27,16 +34,30 @@ export default function Home() {
     if (node) observer.current.observe(node)
   }, [loading, hasMore])
 
+  // Load available books on mount
+  useEffect(() => {
+    loadAvailableBooks()
+  }, [])
+  
+  const loadAvailableBooks = async () => {
+    const books = await getBooks()
+    setAvailableBooks(books)
+    // Select all books by default
+    setSelectedBookIds(books.map(b => b.id!))
+  }
+  
   // Restore search state from session storage on mount
   useEffect(() => {
     const savedState = sessionStorage.getItem('searchState')
     if (savedState) {
       try {
-        const { query: savedQuery, keywords: savedKeywords, results: savedResults, scrollY } = JSON.parse(savedState)
+        const { query: savedQuery, keywords: savedKeywords, results: savedResults, scrollY, selectedBookIds: savedBookIds, sortOrder: savedSortOrder } = JSON.parse(savedState)
         setQuery(savedQuery || '')
         setKeywords(savedKeywords || [])
         setResults(savedResults || [])
         setSearched(savedResults && savedResults.length > 0)
+        if (savedBookIds) setSelectedBookIds(savedBookIds)
+        if (savedSortOrder) setSortOrder(savedSortOrder)
         
         // Restore scroll position after DOM renders
         if (scrollY && savedResults && savedResults.length > 0) {
@@ -54,9 +75,9 @@ export default function Home() {
   useEffect(() => {
     if (searched) {
       const scrollY = window.scrollY
-      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results, scrollY }))
+      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results, scrollY, selectedBookIds, sortOrder }))
     }
-  }, [query, keywords, results, searched])
+  }, [query, keywords, results, searched, selectedBookIds, sortOrder])
 
   const handleKeywordInput = (value: string) => {
     // Split by comma and parse keywords
@@ -93,7 +114,13 @@ export default function Home() {
     try {
       const searchQuery = allKeywords.join(',')
       const offset = isLoadMore ? (page - 1) * 10 : 0
-      const searchResults = await searchBooks(searchQuery, 10, offset)
+      const searchResults = await searchBooks(
+        searchQuery, 
+        10, 
+        offset, 
+        selectedBookIds.length > 0 ? selectedBookIds : undefined,
+        sortOrder
+      )
       
       if (isLoadMore) {
         // Append new results without changing scroll position
@@ -141,6 +168,102 @@ export default function Home() {
         </header>
 
         <div className="space-y-4">
+          {/* Filters Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          >
+            <span className="font-medium text-secondary">🔍 Arama Filtreleri</span>
+            <svg 
+              className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+              {/* Book Selection Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-secondary mb-2">
+                  📚 Aranacak Kitaplar
+                </label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      if (selectedBookIds.length === availableBooks.length) {
+                        setSelectedBookIds([])
+                      } else {
+                        setSelectedBookIds(availableBooks.map(b => b.id!))
+                      }
+                    }}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    {selectedBookIds.length === availableBooks.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
+                  </button>
+                  {availableBooks.map(book => (
+                    <label key={book.id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedBookIds.includes(book.id!)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedBookIds([...selectedBookIds, book.id!])
+                          } else {
+                            setSelectedBookIds(selectedBookIds.filter(id => id !== book.id))
+                          }
+                        }}
+                        className="w-4 h-4 text-accent rounded focus:ring-accent"
+                      />
+                      <span className="text-sm text-gray-700">{book.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort Order Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-secondary mb-2">
+                  📊 Sonuç Sırası
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="sortOrder"
+                      value="grouped"
+                      checked={sortOrder === 'grouped'}
+                      onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                      className="w-4 h-4 text-accent focus:ring-accent"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Kitaplara Göre</div>
+                      <div className="text-xs text-gray-500">Önce 1. kitabın tüm sonuçları, sonra 2. kitabın...</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="sortOrder"
+                      value="interleaved"
+                      checked={sortOrder === 'interleaved'}
+                      onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                      className="w-4 h-4 text-accent focus:ring-accent"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Karışık</div>
+                      <div className="text-xs text-gray-500">Her kitaptan sırayla birer sonuç</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2 mb-2">
             {keywords.map((keyword, index) => (
               <div
@@ -168,7 +291,7 @@ export default function Home() {
           />
           <button
             onClick={() => handleSearch(false)}
-            disabled={loading || (keywords.length === 0 && query.trim() === '')}
+            disabled={loading || (keywords.length === 0 && query.trim() === '') || selectedBookIds.length === 0}
             className="w-full bg-accent text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
           >
             {loading ? 'Aranıyor...' : 'Arama'}
