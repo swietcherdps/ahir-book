@@ -11,14 +11,15 @@ export default function Home() {
   const [searched, setSearched] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const loadingMoreRef = useRef(false)
   
   const observer = useRef<IntersectionObserver | null>(null)
   const lastResultRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading) return
+    if (loading || loadingMoreRef.current) return
     if (observer.current) observer.current.disconnect()
     
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting && hasMore && !loadingMoreRef.current) {
         setPage(prevPage => prevPage + 1)
       }
     })
@@ -31,11 +32,18 @@ export default function Home() {
     const savedState = sessionStorage.getItem('searchState')
     if (savedState) {
       try {
-        const { query: savedQuery, keywords: savedKeywords, results: savedResults } = JSON.parse(savedState)
+        const { query: savedQuery, keywords: savedKeywords, results: savedResults, scrollY } = JSON.parse(savedState)
         setQuery(savedQuery || '')
         setKeywords(savedKeywords || [])
         setResults(savedResults || [])
         setSearched(savedResults && savedResults.length > 0)
+        
+        // Restore scroll position after DOM renders
+        if (scrollY && savedResults && savedResults.length > 0) {
+          setTimeout(() => {
+            window.scrollTo(0, scrollY)
+          }, 100)
+        }
       } catch (error) {
         console.error('Failed to restore search state:', error)
       }
@@ -45,7 +53,8 @@ export default function Home() {
   // Save search state to session storage whenever it changes
   useEffect(() => {
     if (searched) {
-      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results }))
+      const scrollY = window.scrollY
+      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results, scrollY }))
     }
   }, [query, keywords, results, searched])
 
@@ -72,8 +81,10 @@ export default function Home() {
     const allKeywords = [...keywords, ...query.split(',').map(k => k.trim()).filter(Boolean)]
     if (allKeywords.length === 0) return
     
-    setLoading(true)
-    if (!isLoadMore) {
+    if (isLoadMore) {
+      loadingMoreRef.current = true
+    } else {
+      setLoading(true)
       setSearched(true)
       setPage(1)
       setHasMore(true)
@@ -85,6 +96,7 @@ export default function Home() {
       const searchResults = await searchBooks(searchQuery, 10, offset)
       
       if (isLoadMore) {
+        // Append new results without changing scroll position
         setResults(prev => [...prev, ...searchResults])
       } else {
         setResults(searchResults)
@@ -97,7 +109,11 @@ export default function Home() {
     } catch (error) {
       console.error('Search error:', error)
     } finally {
-      setLoading(false)
+      if (isLoadMore) {
+        loadingMoreRef.current = false
+      } else {
+        setLoading(false)
+      }
     }
   }
   
