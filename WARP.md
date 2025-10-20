@@ -116,10 +116,19 @@ All exported from `src/lib/db.ts`:
 
 ### Search Architecture
 - **Multi-keyword search**: Comma-separated search terms ("virgülle ayrılmış")
-- **Full-Text Search (FTS)**: Implemented in Supabase with Turkish/Arabic character support
-- **Ajax-based instant search**: Real-time results without page reload
-- **Highlight**: Yellow (#FBBF24) highlighting of search terms in results
-- **Result display**: First 5 results on home, infinite scroll on `/search-results`
+- **Full-Text Search (FTS)**: Implemented via IndexedDB with Turkish/Arabic character support
+- **Infinite scroll**: Real-time results loading on scroll
+- **Multi-color highlighting**: Each keyword gets a unique color from palette
+  - Color palette (8 colors): Yellow, Green, Blue, Red, Purple, Orange, Pink, Teal
+  - Colors cycle if more than 8 keywords
+  - Consistent coloring across search results and Reader pages
+- **Highlight implementation**:
+  - Search results page: `<mark>` tags with inline styles
+  - Reader page: Text layer overlay with PDF.js transform matrix positioning
+  - Only matched keyword text spans are rendered (not full text layer)
+  - Background color + black text for visibility
+- **Result display**: Infinite scroll on home page
+- **Scroll position preservation**: Back navigation restores scroll position via sessionStorage
 
 ### AI Features
 - **Text summarization**: Via OpenRouter API using GPT-4o model
