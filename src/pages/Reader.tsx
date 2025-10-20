@@ -204,23 +204,18 @@ export default function Reader() {
           div.style.position = 'absolute'
           div.style.whiteSpace = 'pre'
           div.style.userSelect = 'text'
-          div.style.color = 'transparent' // Make text invisible by default
+          div.style.color = 'transparent' // Make text invisible
+          div.textContent = item.str
           
           // Check if this text matches any search keyword
           const normalizedText = normalizeTurkish(item.str.toLowerCase())
           const hasMatch = keywords.some(keyword => normalizedText.includes(normalizeTurkish(keyword)))
           
           if (hasMatch && keywords.length > 0) {
-            // Highlight matched words only using HTML with spans
-            let highlightedHTML = item.str
-            keywords.forEach(keyword => {
-              const regex = new RegExp(`(${keyword})`, 'gi')
-              highlightedHTML = highlightedHTML.replace(regex, '<mark style="background-color: #FBBF24; color: #000; padding: 2px 0;">$1</mark>')
-            })
-            div.innerHTML = highlightedHTML
-          } else {
-            // Just render plain text (invisible but selectable)
-            div.textContent = item.str
+            // Highlight background only - text stays invisible
+            div.style.backgroundColor = '#FBBF24'
+            div.style.padding = '2px 4px'
+            div.style.borderRadius = '2px'
           }
           
           // Apply transform with proper scaling
