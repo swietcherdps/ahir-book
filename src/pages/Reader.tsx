@@ -20,6 +20,7 @@ export default function Reader() {
   const contentRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const renderTaskRef = useRef<{ cancel: () => void; promise: Promise<void> } | null>(null)
+  const isRenderingRef = useRef(false)
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -95,6 +96,12 @@ export default function Reader() {
   }
 
   const renderPDFPage = async () => {
+    // Prevent concurrent renders
+    if (isRenderingRef.current) {
+      console.log('Render already in progress, skipping')
+      return
+    }
+
     // Cancel any ongoing render task
     if (renderTaskRef.current) {
       try {
@@ -118,6 +125,9 @@ export default function Reader() {
       console.error('Cannot get 2D context from canvas')
       return
     }
+
+    // Set rendering flag
+    isRenderingRef.current = true
 
     const arrayBuffer = await book.fileBlob.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
@@ -146,6 +156,9 @@ export default function Reader() {
       if (err?.name !== 'RenderingCancelledException') {
         throw error
       }
+    } finally {
+      // Clear rendering flag
+      isRenderingRef.current = false
     }
 
     // Extract text for selection
