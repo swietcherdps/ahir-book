@@ -168,51 +168,16 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Render text layer for selection and highlighting
+    // Draw highlights directly on canvas for search keywords
     const textContent = await page.getTextContent()
+    const searchQuery = searchParams.get('q') || ''
+    const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     
-    // Create text layer div if it doesn't exist
-    let textLayerDiv = contentRef.current?.querySelector('.textLayer') as HTMLDivElement
-    if (!textLayerDiv && contentRef.current) {
-      textLayerDiv = document.createElement('div')
-      textLayerDiv.className = 'textLayer'
-      textLayerDiv.style.position = 'absolute'
-      textLayerDiv.style.left = '0'
-      textLayerDiv.style.top = '0'
-      textLayerDiv.style.width = `${viewport.width / window.devicePixelRatio}px`
-      textLayerDiv.style.height = `${viewport.height / window.devicePixelRatio}px`
-      textLayerDiv.style.overflow = 'hidden'
-      textLayerDiv.style.lineHeight = '1.0'
-      textLayerDiv.style.pointerEvents = 'auto' // Allow text selection
-      textLayerDiv.style.zIndex = '10' // Above canvas
-      contentRef.current.appendChild(textLayerDiv)
-    } else {
-      // Update dimensions if already exists
-      textLayerDiv.style.width = `${viewport.width / window.devicePixelRatio}px`
-      textLayerDiv.style.height = `${viewport.height / window.devicePixelRatio}px`
-    }
-    
-    if (textLayerDiv) {
-      // Clear previous text layer
-      textLayerDiv.innerHTML = ''
-      
-      // Get search keywords from URL
-      const searchQuery = searchParams.get('q') || ''
-      const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
-      
-      // Render text items with proper scaling and highlighting
-      // Scale factor to match canvas display size
-      const displayScale = 1.0 / window.devicePixelRatio
-      
+    if (keywords.length > 0) {
+      // Draw highlight rectangles behind text
       textContent.items.forEach((item) => {
         if ('str' in item && item.str && 'transform' in item) {
-          const div = document.createElement('div')
-          div.style.position = 'absolute'
-          div.style.whiteSpace = 'pre'
-          div.style.userSelect = 'text'
-          div.style.color = 'transparent' // Make text invisible
-          
-          // Check if this text matches any search keyword and get the color
+          // Check if this text matches any search keyword
           const normalizedText = normalizeTurkish(item.str.toLowerCase())
           let matchedKeywordIndex = -1
           
@@ -224,27 +189,21 @@ export default function Reader() {
           }
           
           if (matchedKeywordIndex !== -1) {
-            // Highlight background with color based on keyword index
+            // Get color for this keyword
             const color = getHighlightColor(matchedKeywordIndex)
-            div.style.backgroundColor = color
-            div.style.padding = '0px'
-            div.style.borderRadius = '0px'
+            
+            // Extract position and size from transform matrix
+            const [a, b, , , tx, ty] = item.transform
+            const fontSize = Math.sqrt(a * a + b * b)
+            const textWidth = item.width || 0
+            
+            // Draw highlight rectangle
+            context.save()
+            context.globalAlpha = 0.4 // Semi-transparent
+            context.fillStyle = color
+            context.fillRect(tx, viewport.height - ty, textWidth, fontSize)
+            context.restore()
           }
-          
-          div.textContent = item.str
-          
-          // Apply transform to match PDF coordinates scaled down to display size
-          const [a, b, c, d, e, f] = item.transform
-          const tx = e * displayScale
-          const ty = f * displayScale
-          const sx = a * displayScale
-          const sy = d * displayScale
-          
-          div.style.transform = `matrix(${sx}, ${b * displayScale}, ${c * displayScale}, ${sy}, ${tx}, ${ty})`
-          div.style.transformOrigin = '0% 0%'
-          div.style.fontSize = `${Math.sqrt(sx * sx + (b * displayScale) * (b * displayScale))}px`
-          
-          textLayerDiv.appendChild(div)
         }
       })
     }
