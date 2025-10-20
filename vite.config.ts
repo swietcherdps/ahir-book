@@ -6,7 +6,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => ({
   // Use /ahir-book/ only for web production (GitHub Pages)
   // Use / for development and mobile builds
-  base: mode === 'production' ? '/ahir-book/' : '/',
+  // Check CAPACITOR env variable for mobile builds
+  base: mode === 'production' && !process.env.CAPACITOR ? '/ahir-book/' : '/',
   plugins: [
     react(),
     VitePWA({

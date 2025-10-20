@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:mobile": "tsc -b && vite build --mode mobile",
+    "build:mobile": "CAPACITOR=true tsc -b && CAPACITOR=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist"
