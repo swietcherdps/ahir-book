@@ -182,9 +182,9 @@ export default function Reader() {
       textLayerDiv.style.right = '0'
       textLayerDiv.style.bottom = '0'
       textLayerDiv.style.overflow = 'hidden'
-      textLayerDiv.style.opacity = '0' // Completely transparent
       textLayerDiv.style.lineHeight = '1.0'
       textLayerDiv.style.pointerEvents = 'auto' // Allow text selection
+      textLayerDiv.style.zIndex = '10' // Above canvas
       contentRef.current.appendChild(textLayerDiv)
     }
     
