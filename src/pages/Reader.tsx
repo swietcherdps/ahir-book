@@ -168,7 +168,7 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Render text layer for selection
+    // Render text layer for selection and highlighting
     const textContent = await page.getTextContent()
     
     // Create text layer div if it doesn't exist
@@ -179,13 +179,17 @@ export default function Reader() {
       textLayerDiv.style.position = 'absolute'
       textLayerDiv.style.left = '0'
       textLayerDiv.style.top = '0'
-      textLayerDiv.style.right = '0'
-      textLayerDiv.style.bottom = '0'
+      textLayerDiv.style.width = `${viewport.width / window.devicePixelRatio}px`
+      textLayerDiv.style.height = `${viewport.height / window.devicePixelRatio}px`
       textLayerDiv.style.overflow = 'hidden'
       textLayerDiv.style.lineHeight = '1.0'
       textLayerDiv.style.pointerEvents = 'auto' // Allow text selection
       textLayerDiv.style.zIndex = '10' // Above canvas
       contentRef.current.appendChild(textLayerDiv)
+    } else {
+      // Update dimensions if already exists
+      textLayerDiv.style.width = `${viewport.width / window.devicePixelRatio}px`
+      textLayerDiv.style.height = `${viewport.height / window.devicePixelRatio}px`
     }
     
     if (textLayerDiv) {
@@ -197,7 +201,9 @@ export default function Reader() {
       const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
       
       // Render text items with proper scaling and highlighting
-      const scale = window.devicePixelRatio * 1.5
+      // Scale factor to match canvas display size
+      const displayScale = 1.0 / window.devicePixelRatio
+      
       textContent.items.forEach((item) => {
         if ('str' in item && item.str && 'transform' in item) {
           const div = document.createElement('div')
@@ -221,17 +227,22 @@ export default function Reader() {
             // Highlight background with color based on keyword index
             const color = getHighlightColor(matchedKeywordIndex)
             div.style.backgroundColor = color
-            div.style.padding = '2px 4px'
-            div.style.borderRadius = '2px'
+            div.style.padding = '0px'
+            div.style.borderRadius = '0px'
           }
           
           div.textContent = item.str
           
-          // Apply transform with proper scaling
+          // Apply transform to match PDF coordinates scaled down to display size
           const [a, b, c, d, e, f] = item.transform
-          div.style.transform = `matrix(${a / scale}, ${b / scale}, ${c / scale}, ${d / scale}, ${e / scale}, ${f / scale})`
+          const tx = e * displayScale
+          const ty = f * displayScale
+          const sx = a * displayScale
+          const sy = d * displayScale
+          
+          div.style.transform = `matrix(${sx}, ${b * displayScale}, ${c * displayScale}, ${sy}, ${tx}, ${ty})`
           div.style.transformOrigin = '0% 0%'
-          div.style.fontSize = `${Math.sqrt(a * a + b * b) / scale}px`
+          div.style.fontSize = `${Math.sqrt(sx * sx + (b * displayScale) * (b * displayScale))}px`
           
           textLayerDiv.appendChild(div)
         }
