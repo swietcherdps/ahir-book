@@ -159,11 +159,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background dark:bg-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
         <header className="flex items-center justify-between mb-8">
           <Navigation />
-          <h1 className="text-2xl font-bold text-primary">Ahir Book</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-gray-100">Ahir Book</h1>
           <div className="w-8" />
         </header>
 
@@ -171,9 +171,9 @@ export default function Home() {
           {/* Filters Toggle Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+            className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition"
           >
-            <span className="font-medium text-secondary">🔍 Arama Filtreleri</span>
+            <span className="font-medium text-secondary dark:text-gray-200">🔍 Arama Filtreleri</span>
             <svg 
               className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`}
               fill="none" 

@@ -199,7 +199,7 @@ export default function Reader() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background dark:bg-gray-900 flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -207,7 +207,7 @@ export default function Reader() {
 
   if (error || !book) {
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="min-h-screen bg-background dark:bg-gray-900 p-4">
         <div className="max-w-4xl mx-auto text-center py-12">
           <p className="text-red-500 mb-4">{error || 'Kitap bulunamadı'}</p>
           <Link to="/library" className="text-accent hover:underline">

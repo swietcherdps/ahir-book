@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { App as CapacitorApp } from '@capacitor/app'
+import { useTheme } from './hooks/useTheme'
 import Home from './pages/Home'
 import Library from './pages/Library'
 import Bookmarks from './pages/Bookmarks'
@@ -12,6 +13,9 @@ import Import from './pages/Import'
 function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
+  
+  // Apply theme globally on every route
+  useTheme()
 
   useEffect(() => {
     let listenerHandle: any = null

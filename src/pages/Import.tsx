@@ -57,7 +57,7 @@ export default function Import() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background dark:bg-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
         <header className="flex items-center justify-between mb-8">
           <Link to="/library" className="p-2 hover:bg-gray-200 rounded-lg">
