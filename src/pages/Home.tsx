@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { searchBooks, type SearchResult } from '../lib/search'
 import Navigation from '../components/Navigation'
@@ -9,6 +9,29 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+
+  // Restore search state from session storage on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('searchState')
+    if (savedState) {
+      try {
+        const { query: savedQuery, keywords: savedKeywords, results: savedResults } = JSON.parse(savedState)
+        setQuery(savedQuery || '')
+        setKeywords(savedKeywords || [])
+        setResults(savedResults || [])
+        setSearched(savedResults && savedResults.length > 0)
+      } catch (error) {
+        console.error('Failed to restore search state:', error)
+      }
+    }
+  }, [])
+
+  // Save search state to session storage whenever it changes
+  useEffect(() => {
+    if (searched) {
+      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results }))
+    }
+  }, [query, keywords, results, searched])
 
   const handleKeywordInput = (value: string) => {
     // Split by comma and parse keywords
