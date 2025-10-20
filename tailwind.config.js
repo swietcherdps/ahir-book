@@ -17,7 +17,21 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
+      spacing: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      addUtilities({
+        '.pb-safe': {
+          'padding-bottom': 'env(safe-area-inset-bottom)',
+        },
+        '.mb-safe': {
+          'margin-bottom': 'env(safe-area-inset-bottom)',
+        },
+      })
+    },
+  ],
 }

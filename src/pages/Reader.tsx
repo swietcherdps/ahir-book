@@ -250,8 +250,8 @@ export default function Reader() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen p-4" style={{ backgroundColor: backgroundColor === 'dark' ? '#1A202C' : '#F7FAFC' }}>
+      <div className="max-w-4xl mx-auto pb-safe">
         <header className="flex items-center justify-between mb-8">
           <Link to="/library" className="p-2 hover:bg-gray-200 rounded-lg">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,8 +328,9 @@ export default function Reader() {
           
           {/* Page content */}
           <div 
-            className="p-8 min-h-[600px]"
+            className="p-4 md:p-8 min-h-[400px]"
             onMouseUp={handleTextSelection}
+            onTouchEnd={handleTextSelection}
             style={{ backgroundColor: backgroundColors[backgroundColor].bg }}
           >
             <div 
@@ -572,20 +573,26 @@ export default function Reader() {
           </div>
         )}
 
-        {showAIMenu && (
-          <div className="fixed bottom-24 right-8 bg-white rounded-lg shadow-xl p-4 space-y-2">
+        {showAIMenu && selectedText && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl p-3 flex gap-2 z-50 border-2 border-accent">
             <button
               onClick={handleSummarize}
               disabled={summarizing}
-              className="w-full px-4 py-2 bg-accent text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 text-sm font-medium shadow-md"
             >
-              {summarizing ? 'Özetleniyor...' : '📝 Özetle'}
+              {summarizing ? '⏳ Özetleniyor...' : '📝 Özetle'}
             </button>
             <button
               onClick={handleSpeak}
-              className="w-full px-4 py-2 bg-secondary text-white rounded hover:bg-gray-600"
+              className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-600 text-sm font-medium shadow-md"
             >
               🔊 Sesli Oku
+            </button>
+            <button
+              onClick={() => setShowAIMenu(false)}
+              className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+            >
+              ✕
             </button>
           </div>
         )}
@@ -603,18 +610,18 @@ export default function Reader() {
           </div>
         )}
 
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-6 pb-6 mb-safe">
           <button 
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-lg"
           >
             ← Önceki Sayfa
           </button>
           <button 
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-lg"
           >
             Sonraki Sayfa →
           </button>
