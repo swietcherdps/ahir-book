@@ -36,13 +36,15 @@ Ahir Book allows users to easily import and organize PDF and EPUB books from the
 
 ## Tech Stack
 
-- **Frontend:** React, TypeScript, Tailwind CSS, Vite
-- **Backend:** Supabase (authentication, database, storage, real-time)
+- **Frontend:** React 19, TypeScript, Tailwind CSS v3, Vite
+- **Local Storage:** IndexedDB via Dexie.js (offline-first)
 - **AI Integration:** OpenRouter API, OpenAI GPT-4o
 - **File Processing:** PDF.js, EPUB.js
 - **State Management:** Zustand
-- **Routing:** React Router DOM
-- **PWA:** Vite Plugin PWA
+- **Routing:** React Router DOM v7
+- **PWA:** Vite Plugin PWA with Workbox
+
+**Note:** No backend server required. All data is stored locally in the browser.
 
 ## Getting Started
 
@@ -54,7 +56,7 @@ Ahir Book allows users to easily import and organize PDF and EPUB books from the
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/swietcherdps/ahir-book.git
 cd ahir-book
 ```
 
@@ -63,17 +65,12 @@ cd ahir-book
 npm install
 ```
 
-3. Set up environment variables:
-Create a `.env` file in the root directory:
-```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-4. Start the development server:
+3. Start the development server:
 ```bash
 npm run dev
 ```
+
+**No environment variables or backend setup required!** The app runs completely offline.
 
 ## Available Scripts
 
@@ -127,14 +124,25 @@ ahir-book/
 - Headings: Inter font family
 - Body Text: System UI, -apple-system, sans-serif
 
-## Development Phases
+## Development Status
 
 1. **Phase 1:** Project Setup & Basic Infrastructure ✅
-2. **Phase 2:** Book Management & Library
-3. **Phase 3:** Book Reader & Bookmarking
-4. **Phase 4:** Advanced Search Functionality
-5. **Phase 5:** AI Integration
-6. **Phase 6:** Design Improvements & PWA Final Touches
+2. **Phase 2:** Book Management & Library ✅
+3. **Phase 3:** Book Reader & Bookmarking 🔄 (In Progress)
+4. **Phase 4:** Advanced Search Functionality ✅
+5. **Phase 5:** AI Integration ⏳ (Planned)
+6. **Phase 6:** Design Improvements & PWA ⏳ (Planned)
+
+## Features Implemented
+
+✅ PDF/EPUB file import with drag & drop
+✅ Local storage using IndexedDB
+✅ Book library with cover images
+✅ Full-text search with Turkish/Arabic support
+✅ Multi-keyword comma-separated search
+✅ Search result highlighting
+✅ Responsive mobile-first design
+✅ PWA offline support
 
 ## License
 

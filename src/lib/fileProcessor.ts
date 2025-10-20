@@ -2,8 +2,11 @@ import * as pdfjsLib from 'pdfjs-dist'
 import ePub from 'epubjs'
 import { addBook, indexBookContent, checkStorageQuota } from './db'
 
-// Set PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+// Set PDF.js worker to use local version from node_modules
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString()
 
 export interface ProcessedBook {
   title: string
@@ -51,7 +54,7 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
     
     // Extract metadata
     const metadata = await pdf.getMetadata()
-    const info: any = metadata.info
+    const info = metadata.info as { Title?: string; Author?: string } | undefined
     const title = info?.Title || file.name.replace('.pdf', '')
     const author = info?.Author || null
     
@@ -61,7 +64,7 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
       const text = textContent.items
-        .map((item: any) => item.str)
+        .map((item) => ('str' in item ? item.str : ''))
         .join(' ')
       
       pages.push({
@@ -83,8 +86,8 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
       await firstPage.render({
         canvasContext: context,
         viewport: viewport,
-        intent: 'display'
-      } as any).promise
+        canvas: canvas
+      }).promise
       
       coverBlob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.8)
@@ -133,7 +136,7 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
     }
     
     // Extract text from all chapters
-    const spine: any = await book.loaded.spine
+    const spine = await book.loaded.spine as { items?: Array<{ href: string }> }
     const pages: Array<{ pageNumber: number; text: string }> = []
     
     let pageNumber = 1

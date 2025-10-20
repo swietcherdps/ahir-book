@@ -18,8 +18,9 @@ export default function Import() {
     try {
       await importBook(file)
       navigate('/library')
-    } catch (err: any) {
-      setError(err.message || 'Dosya yüklenirken bir hata oluştu')
+    } catch (err: unknown) {
+      const error = err as Error
+      setError(error.message || 'Dosya yüklenirken bir hata oluştu')
     } finally {
       setUploading(false)
     }
