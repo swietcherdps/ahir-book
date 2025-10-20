@@ -251,10 +251,10 @@ export default function Reader() {
 
   return (
     <div className="min-h-screen p-4" style={{ backgroundColor: backgroundColor === 'dark' ? '#1A202C' : '#F7FAFC' }}>
-      <div className="max-w-4xl mx-auto pb-safe">
+      <div className="max-w-4xl mx-auto">
         <header className="flex items-center justify-between mb-8">
-          <Link to="/library" className="p-2 hover:bg-gray-200 rounded-lg">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link to="/library" className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: backgroundColor === 'dark' ? '#E2E8F0' : 'currentColor' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
@@ -610,7 +610,7 @@ export default function Reader() {
           </div>
         )}
 
-        <div className="flex justify-between mt-6 pb-6 mb-safe">
+        <div className="flex justify-between mt-6 pb-safe mb-safe">
           <button 
             onClick={handlePrevPage}
             disabled={currentPage === 1}
