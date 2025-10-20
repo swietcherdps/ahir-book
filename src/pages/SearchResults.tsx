@@ -172,7 +172,7 @@ export default function SearchResults() {
                 )}
                 
                 <Link
-                  to={`/reader/${result.bookId}/${result.pageNumber}`}
+                  to={`/reader/${result.bookId}/${result.pageNumber}?q=${encodeURIComponent(query)}`}
                   className="inline-block px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 transition text-sm"
                 >
                   Sayfaya Git

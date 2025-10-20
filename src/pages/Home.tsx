@@ -144,12 +144,12 @@ export default function Home() {
                       dangerouslySetInnerHTML={{ __html: result.highlightedSnippet }}
                     />
                     <div className="flex gap-2">
-                      <Link
-                        to={`/reader/${result.bookId}/${result.pageNumber}`}
-                        className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 transition text-sm"
-                      >
-                        Sayfaya Git
-                      </Link>
+                    <Link
+                      to={`/reader/${result.bookId}/${result.pageNumber}?q=${encodeURIComponent([...keywords, query].filter(Boolean).join(','))}`}
+                      className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 transition text-sm"
+                    >
+                      Sayfaya Git
+                    </Link>
                     </div>
                   </div>
                 ))}

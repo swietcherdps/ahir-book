@@ -1,12 +1,14 @@
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { getBook, addBookmark, deleteBookmark, getBookmarks, type Book, type Bookmark } from '../lib/db'
 import * as pdfjsLib from 'pdfjs-dist'
 import ePub from 'epubjs'
+import { normalizeTurkish } from '../lib/search'
 
 export default function Reader() {
   const { bookId, pageId } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -190,7 +192,11 @@ export default function Reader() {
       // Clear previous text layer
       textLayerDiv.innerHTML = ''
       
-      // Render text items with proper scaling
+      // Get search keywords from URL
+      const searchQuery = searchParams.get('q') || ''
+      const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
+      
+      // Render text items with proper scaling and highlighting
       const scale = window.devicePixelRatio * 1.5
       textContent.items.forEach((item) => {
         if ('str' in item && item.str && 'transform' in item) {
@@ -198,8 +204,21 @@ export default function Reader() {
           div.textContent = item.str
           div.style.position = 'absolute'
           div.style.whiteSpace = 'pre'
-          div.style.color = 'transparent' // Make text invisible but selectable
           div.style.userSelect = 'text'
+          
+          // Check if this text matches any search keyword
+          const normalizedText = normalizeTurkish(item.str.toLowerCase())
+          const hasMatch = keywords.some(keyword => normalizedText.includes(normalizeTurkish(keyword)))
+          
+          if (hasMatch) {
+            // Highlight matched text
+            div.style.backgroundColor = '#FBBF24'
+            div.style.color = '#000'
+            div.style.padding = '2px 0'
+          } else {
+            // Make non-matched text invisible but selectable
+            div.style.color = 'transparent'
+          }
           
           // Apply transform with proper scaling
           const [a, b, c, d, e, f] = item.transform

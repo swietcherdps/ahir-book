@@ -10,7 +10,7 @@ export interface SearchResult {
 }
 
 // Turkish character normalization for case-insensitive search
-const normalizeTurkish = (text: string): string => {
+export const normalizeTurkish = (text: string): string => {
   return text
     .toLowerCase()
     .replace(/i/g, 'i')
