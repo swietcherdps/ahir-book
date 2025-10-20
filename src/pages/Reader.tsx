@@ -19,6 +19,7 @@ export default function Reader() {
   const [summary, setSummary] = useState('')
   const contentRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const renderTaskRef = useRef<{ cancel: () => void; promise: Promise<void> } | null>(null)
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -36,6 +37,19 @@ export default function Reader() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId, book, bookmarks])
+
+  // Cleanup render task on unmount
+  useEffect(() => {
+    return () => {
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel()
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    }
+  }, [])
 
   const loadBook = async () => {
     try {
@@ -81,7 +95,29 @@ export default function Reader() {
   }
 
   const renderPDFPage = async () => {
-    if (!book || !canvasRef.current) return
+    // Cancel any ongoing render task
+    if (renderTaskRef.current) {
+      try {
+        renderTaskRef.current.cancel()
+      } catch {
+        // Ignore cancellation errors
+      }
+      renderTaskRef.current = null
+    }
+
+    // Check if canvas is ready
+    if (!book || !canvasRef.current) {
+      console.warn('Canvas not ready for rendering')
+      return
+    }
+
+    const canvas = canvasRef.current
+    const context = canvas.getContext('2d')
+    
+    if (!context) {
+      console.error('Cannot get 2D context from canvas')
+      return
+    }
 
     const arrayBuffer = await book.fileBlob.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
@@ -90,16 +126,27 @@ export default function Reader() {
     const page = await pdf.getPage(currentPage)
     const viewport = page.getViewport({ scale: 1.5 })
     
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')!
     canvas.height = viewport.height
     canvas.width = viewport.width
 
-    await page.render({
+    // Create and store render task
+    const renderTask = page.render({
       canvasContext: context,
       viewport: viewport,
       canvas: canvas
-    }).promise
+    })
+    
+    renderTaskRef.current = renderTask
+
+    try {
+      await renderTask.promise
+    } catch (error: unknown) {
+      // Ignore cancellation errors, throw others
+      const err = error as { name?: string }
+      if (err?.name !== 'RenderingCancelledException') {
+        throw error
+      }
+    }
 
     // Extract text for selection
     const textContent = await page.getTextContent()
