@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'Ahir Book',
         short_name: 'Ahir',
         description: 'Dijital kitap okuma ve arama uygulaması - Çınar ağacı gibi kök salmış bilgi',
-        theme_color: '#7D8B5C',
+        theme_color: '#3182CE',
         background_color: '#F7FAFC',
         display: 'standalone',
         start_url: '/',
@@ -25,9 +25,33 @@ export default defineConfig({
         categories: ['books', 'education', 'productivity'],
         icons: [
           {
-            src: '/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/icon-72x72.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-96x96.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-128x128.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-144x144.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-152x152.png',
+            sizes: '152x152',
+            type: 'image/png',
             purpose: 'any'
           },
           {
@@ -37,10 +61,22 @@ export default defineConfig({
             purpose: 'any maskable'
           },
           {
+            src: '/icon-384x384.png',
+            sizes: '384x384',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
             src: '/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          },
+          {
+            src: '/icon-1024x1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },
