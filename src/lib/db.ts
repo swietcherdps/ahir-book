@@ -38,7 +38,7 @@ export class AhirBookDB extends Dexie {
     this.version(1).stores({
       books: '++id, title, author, format, createdAt',
       bookmarks: '++id, bookId, pageId, createdAt',
-      bookContent: '++id, bookId, pageNumber, indexedAt'
+      bookContent: '++id, bookId, pageNumber, [bookId+pageNumber], indexedAt'
     })
   }
 }
