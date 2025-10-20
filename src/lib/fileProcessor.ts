@@ -64,30 +64,64 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
       
-      // Preserve layout by tracking Y positions for line breaks
+      // Group text items by lines based on Y position
+      interface TextLine {
+        y: number
+        items: Array<{ x: number; str: string }>
+      }
+      
+      const lines: TextLine[] = []
+      let currentLine: TextLine | null = null
+      
+      for (const item of textContent.items) {
+        if (!('str' in item) || !('transform' in item)) continue
+        
+        const x = item.transform[4]
+        const y = item.transform[5]
+        const str = item.str.trim()
+        
+        if (!str) continue
+        
+        // Check if this item belongs to current line (similar Y position)
+        if (currentLine && Math.abs(y - currentLine.y) < 5) {
+          currentLine.items.push({ x, str })
+        } else {
+          // Start new line
+          if (currentLine) lines.push(currentLine)
+          currentLine = { y, items: [{ x, str }] }
+        }
+      }
+      
+      if (currentLine) lines.push(currentLine)
+      
+      // Sort lines by Y position (top to bottom)
+      lines.sort((a, b) => b.y - a.y)
+      
+      // Build text with proper line breaks and paragraph detection
       let lastY = -1
-      const text = textContent.items
-        .map((item, index) => {
-          if (!('str' in item) || !('transform' in item)) return ''
-          
-          const currentY = item.transform[5]
-          const str = item.str
-          
-          // Add line break if Y position changed significantly (new line)
-          if (lastY !== -1 && Math.abs(currentY - lastY) > 5) {
-            lastY = currentY
-            return '\n' + str
-          }
-          
-          lastY = currentY
-          // Add space between words on same line
-          return (index > 0 ? ' ' : '') + str
-        })
-        .join('')
+      const lineTexts: string[] = []
+      
+      for (const line of lines) {
+        // Sort items in line by X position (left to right)
+        line.items.sort((a, b) => a.x - b.x)
+        
+        // Join items with spaces
+        const lineText = line.items.map(item => item.str).join(' ')
+        
+        // Detect paragraph breaks (larger Y gap)
+        if (lastY !== -1 && Math.abs(line.y - lastY) > 15) {
+          // Add extra line break for paragraph
+          lineTexts.push('\n' + lineText)
+        } else {
+          lineTexts.push(lineText)
+        }
+        
+        lastY = line.y
+      }
       
       pages.push({
         pageNumber: i,
-        text: text.trim()
+        text: lineTexts.join('\n').trim()
       })
     }
     

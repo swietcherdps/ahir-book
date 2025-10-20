@@ -18,6 +18,7 @@ export default function Reader() {
   const [summarizing, setSummarizing] = useState(false)
   const [summary, setSummary] = useState('')
   const [pageText, setPageText] = useState('')
+  const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base')
   
   const currentPage = parseInt(pageId || '1')
   const currentBookId = parseInt(bookId || '0')
@@ -202,6 +203,13 @@ export default function Reader() {
     )
   }
 
+  const fontSizeClasses = {
+    sm: 'text-sm',
+    base: 'text-base',
+    lg: 'text-lg',
+    xl: 'text-xl'
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
@@ -211,30 +219,70 @@ export default function Reader() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <div className="text-center">
+          <div className="text-center flex-1">
             <h2 className="font-semibold text-lg">{book.title}</h2>
             <span className="text-sm text-gray-600">Sayfa {currentPage} / {totalPages}</span>
           </div>
-          <button 
-            onClick={toggleBookmark}
-            className="p-2 hover:bg-gray-200 rounded-lg transition"
-          >
-            <svg 
-              className={`w-6 h-6 ${isBookmarked ? 'text-highlight fill-current' : 'text-gray-400'}`}
-              fill={isBookmarked ? 'currentColor' : 'none'}
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-2">
+            {/* Font size controls */}
+            <div className="flex items-center gap-1 bg-white rounded-lg shadow-sm p-1">
+              <button
+                onClick={() => setFontSize('sm')}
+                className={`px-2 py-1 rounded text-xs transition ${
+                  fontSize === 'sm' ? 'bg-accent text-white' : 'hover:bg-gray-100'
+                }`}
+                title="Küçük"
+              >
+                A-
+              </button>
+              <button
+                onClick={() => setFontSize('base')}
+                className={`px-2 py-1 rounded text-sm transition ${
+                  fontSize === 'base' ? 'bg-accent text-white' : 'hover:bg-gray-100'
+                }`}
+                title="Normal"
+              >
+                A
+              </button>
+              <button
+                onClick={() => setFontSize('lg')}
+                className={`px-2 py-1 rounded text-base transition ${
+                  fontSize === 'lg' ? 'bg-accent text-white' : 'hover:bg-gray-100'
+                }`}
+                title="Büyük"
+              >
+                A+
+              </button>
+              <button
+                onClick={() => setFontSize('xl')}
+                className={`px-2 py-1 rounded text-lg transition ${
+                  fontSize === 'xl' ? 'bg-accent text-white' : 'hover:bg-gray-100'
+                }`}
+                title="Çok Büyük"
+              >
+                A++
+              </button>
+            </div>
+            <button 
+              onClick={toggleBookmark}
+              className="p-2 hover:bg-gray-200 rounded-lg transition"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </button>
+              <svg 
+                className={`w-6 h-6 ${isBookmarked ? 'text-highlight fill-current' : 'text-gray-400'}`}
+                fill={isBookmarked ? 'currentColor' : 'none'}
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </button>
+          </div>
         </header>
 
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Page number header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-            <span className="text-sm text-gray-600">Sayfa {currentPage}</span>
-            <span className="text-sm text-gray-500">{book.title}</span>
+          {/* Page number header - centered */}
+          <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 text-center">
+            <span className="text-sm text-gray-600 font-medium">Sayfa {currentPage}</span>
           </div>
           
           {/* Page content */}
@@ -243,8 +291,15 @@ export default function Reader() {
             onMouseUp={handleTextSelection}
           >
             <div 
-              className="font-serif text-base leading-relaxed whitespace-pre-wrap break-words"
-              style={{ fontFamily: 'Georgia, serif', lineHeight: '1.8' }}
+              className={`font-serif ${fontSizeClasses[fontSize]} leading-loose whitespace-pre-wrap break-words`}
+              style={{ 
+                fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif',
+                lineHeight: fontSize === 'sm' ? '1.8' : fontSize === 'base' ? '2.0' : '2.2',
+                textAlign: 'justify',
+                hyphens: 'auto',
+                wordSpacing: '0.05em',
+                letterSpacing: '0.01em'
+              }}
               dangerouslySetInnerHTML={{
                 __html: highlightText(
                   pageText,
