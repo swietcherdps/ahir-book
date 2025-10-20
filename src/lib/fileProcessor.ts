@@ -51,8 +51,9 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
     
     // Extract metadata
     const metadata = await pdf.getMetadata()
-    const title = metadata.info?.Title || file.name.replace('.pdf', '')
-    const author = metadata.info?.Author || null
+    const info: any = metadata.info
+    const title = info?.Title || file.name.replace('.pdf', '')
+    const author = info?.Author || null
     
     // Extract text from all pages
     const pages: Array<{ pageNumber: number; text: string }> = []
@@ -81,8 +82,9 @@ export const processPDF = async (file: File): Promise<ProcessedBook> => {
       
       await firstPage.render({
         canvasContext: context,
-        viewport: viewport
-      }).promise
+        viewport: viewport,
+        intent: 'display'
+      } as any).promise
       
       coverBlob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.8)
@@ -131,11 +133,11 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
     }
     
     // Extract text from all chapters
-    const spine = await book.loaded.spine
+    const spine: any = await book.loaded.spine
     const pages: Array<{ pageNumber: number; text: string }> = []
     
     let pageNumber = 1
-    for (const item of spine.items) {
+    for (const item of (spine.items || [])) {
       try {
         const section = book.spine.get(item.href)
         await section.load(book.load.bind(book))
