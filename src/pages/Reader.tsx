@@ -168,34 +168,19 @@ export default function Reader() {
       isRenderingRef.current = false
     }
 
-    // Render text layer for highlighting
+    // Draw highlight rectangles directly on canvas like Ctrl+F
     const textContent = await page.getTextContent()
     const searchQuery = searchParams.get('q') || ''
     const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     
-    // Remove old text layer if exists
-    const oldTextLayer = contentRef.current?.querySelector('.textLayer')
-    if (oldTextLayer) {
-      oldTextLayer.remove()
-    }
-    
     if (keywords.length > 0) {
-      // Create text layer container
-      const textLayerDiv = document.createElement('div')
-      textLayerDiv.className = 'textLayer'
-      textLayerDiv.style.position = 'absolute'
-      textLayerDiv.style.left = '0'
-      textLayerDiv.style.top = '0'
-      textLayerDiv.style.width = canvas.style.width
-      textLayerDiv.style.height = canvas.style.height
-      textLayerDiv.style.overflow = 'hidden'
-      textLayerDiv.style.lineHeight = '1.0'
+      // Get canvas rendering context
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
       
-      contentRef.current?.appendChild(textLayerDiv)
-      
-      // Render each text item as a span
+      // Draw highlight rectangles behind text
       textContent.items.forEach((item) => {
-        if ('str' in item && item.str && 'transform' in item) {
+        if ('str' in item && item.str && 'transform' in item && 'width' in item && 'height' in item) {
           const text = item.str
           const normalizedText = normalizeTurkish(text.toLowerCase())
           
@@ -208,30 +193,24 @@ export default function Reader() {
             }
           }
           
-          // Only render if matched
+          // Draw highlight rectangle if matched
           if (matchedKeywordIndex !== -1) {
-            const span = document.createElement('span')
-            span.textContent = text
-            span.style.position = 'absolute'
-            span.style.whiteSpace = 'pre'
-            span.style.transformOrigin = 'left bottom'
-            
-            // Get transform matrix
-            const tx = item.transform
-            const fontHeight = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3])
-            
-            // Apply highlight color
             const color = getHighlightColor(matchedKeywordIndex)
-            span.style.backgroundColor = color
-            span.style.color = 'black'
+            const transform = item.transform
             
-            // Position and scale
-            span.style.left = `${tx[4]}px`
-            span.style.top = `${tx[5]}px`
-            span.style.fontSize = `${fontHeight}px`
-            span.style.fontFamily = 'sans-serif'
+            // Extract position from transform: [scaleX, skewY, skewX, scaleY, translateX, translateY]
+            const x = transform[4]
+            const y = transform[5]
+            const width = item.width * Math.abs(transform[0]) // width * scaleX
+            const height = Math.abs(transform[3]) // scaleY gives font height
             
-            textLayerDiv.appendChild(span)
+            // Draw semi-transparent highlight rectangle
+            ctx.save()
+            ctx.globalAlpha = 0.3
+            ctx.fillStyle = color
+            // Flip Y coordinate because PDF has origin at bottom-left
+            ctx.fillRect(x, viewport.height - y - height, width, height)
+            ctx.restore()
           }
         }
       })
