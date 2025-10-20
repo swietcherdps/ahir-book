@@ -22,7 +22,7 @@ export default function Reader() {
   const [showGoToPage, setShowGoToPage] = useState(false)
   const [goToPageInput, setGoToPageInput] = useState('')
   const [showReadingSettings, setShowReadingSettings] = useState(false)
-  const [fontFamily, setFontFamily] = useState<'serif' | 'sans' | 'mono'>('serif')
+  const [fontFamily, setFontFamily] = useState<'serif' | 'merriweather' | 'system' | 'roboto' | 'opensans' | 'arial' | 'poppins' | 'verdana' | 'mono'>('serif')
   const [backgroundColor, setBackgroundColor] = useState<'white' | 'sepia' | 'dark' | 'cream'>('white')
   
   const currentPage = parseInt(pageId || '1')
@@ -226,8 +226,19 @@ export default function Reader() {
   }
 
   const fontFamilyStyles = {
+    // Serif fonts - classic book reading
     serif: 'Georgia, Cambria, "Times New Roman", Times, serif',
-    sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    merriweather: '"Merriweather", Georgia, serif',
+    
+    // Sans-serif fonts - modern and clean
+    system: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    roboto: '"Roboto", system-ui, sans-serif',
+    opensans: '"Open Sans", system-ui, sans-serif',
+    arial: 'Arial, Helvetica, sans-serif',
+    poppins: '"Poppins", system-ui, sans-serif',
+    verdana: 'Verdana, Geneva, sans-serif',
+    
+    // Monospace - code and technical
     mono: '"Courier New", Courier, monospace'
   }
 
@@ -378,40 +389,125 @@ export default function Reader() {
               {/* Font Family */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">Yazı Tipi</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => setFontFamily('serif')}
-                    className={`px-4 py-2 rounded-lg border-2 transition ${
-                      fontFamily === 'serif' 
-                        ? 'border-accent bg-accent text-white' 
-                        : 'border-gray-300 hover:border-accent'
-                    }`}
-                    style={{ fontFamily: fontFamilyStyles.serif }}
-                  >
-                    Serif
-                  </button>
-                  <button
-                    onClick={() => setFontFamily('sans')}
-                    className={`px-4 py-2 rounded-lg border-2 transition ${
-                      fontFamily === 'sans' 
-                        ? 'border-accent bg-accent text-white' 
-                        : 'border-gray-300 hover:border-accent'
-                    }`}
-                    style={{ fontFamily: fontFamilyStyles.sans }}
-                  >
-                    Sans
-                  </button>
-                  <button
-                    onClick={() => setFontFamily('mono')}
-                    className={`px-4 py-2 rounded-lg border-2 transition ${
-                      fontFamily === 'mono' 
-                        ? 'border-accent bg-accent text-white' 
-                        : 'border-gray-300 hover:border-accent'
-                    }`}
-                    style={{ fontFamily: fontFamilyStyles.mono }}
-                  >
-                    Mono
-                  </button>
+                
+                {/* Serif Fonts */}
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">SERIF (Klasik)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setFontFamily('serif')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'serif' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.serif }}
+                    >
+                      Georgia
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('merriweather')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'merriweather' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.merriweather }}
+                    >
+                      Merriweather
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sans-Serif Fonts */}
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">SANS-SERIF (Modern)</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => setFontFamily('system')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'system' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.system }}
+                    >
+                      System UI
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('roboto')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'roboto' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.roboto }}
+                    >
+                      Roboto
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('opensans')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'opensans' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.opensans }}
+                    >
+                      Open Sans
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('poppins')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'poppins' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.poppins }}
+                    >
+                      Poppins
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('arial')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'arial' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.arial }}
+                    >
+                      Arial
+                    </button>
+                    <button
+                      onClick={() => setFontFamily('verdana')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'verdana' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.verdana }}
+                    >
+                      Verdana
+                    </button>
+                  </div>
+                </div>
+
+                {/* Monospace */}
+                <div>
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">MONOSPACE (Teknik)</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      onClick={() => setFontFamily('mono')}
+                      className={`px-3 py-2 rounded-lg border-2 transition text-sm ${
+                        fontFamily === 'mono' 
+                          ? 'border-accent bg-accent text-white' 
+                          : 'border-gray-300 hover:border-accent'
+                      }`}
+                      style={{ fontFamily: fontFamilyStyles.mono }}
+                    >
+                      Courier New
+                    </button>
+                  </div>
                 </div>
               </div>
 
