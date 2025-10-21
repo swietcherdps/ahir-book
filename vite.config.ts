@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#3182CE',
         background_color: '#F7FAFC',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: '/ahir-book/',
+        scope: '/ahir-book/',
         orientation: 'portrait',
         categories: ['books', 'education', 'productivity'],
         icons: [
