@@ -115,6 +115,12 @@ function AppContent() {
 
         // 2. Show Modal with Content and Path
         const { title, body } = notification.notification
+        if (path.startsWith('/reader/') && (extra?.bookTitle || extra?.originalTitle || title)) {
+          const url = new URL(path, window.location.origin)
+          url.searchParams.set('bookTitle', extra?.bookTitle || extra?.originalTitle || title)
+          if (extra?.sourceKey) url.searchParams.set('sourceKey', extra.sourceKey)
+          path = url.pathname + url.search
+        }
         if (title && body) {
           setModalContent({ title, body, path })
           setModalOpen(true)

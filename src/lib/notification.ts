@@ -476,6 +476,8 @@ export const scheduleNotifications = async (
             targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
         }
 
+        if (book.sourceKey) targetUrl += `${targetUrl.includes('?') ? '&' : '?'}sourceKey=${encodeURIComponent(book.sourceKey)}`
+
         // Use just the book title (no date in notification)
         // Date/time is stored in schedule.at and shown in Settings pending list
         const notificationData = {
@@ -490,6 +492,8 @@ export const scheduleNotifications = async (
             actionTypeId: '',
             extra: {
                 bookId: book.id,
+                bookTitle: book.title,
+                sourceKey: book.sourceKey,
                 pageId: randomContent.pageNumber,
                 url: targetUrl,
                 isAI: item.useAI,
@@ -846,6 +850,7 @@ export const replenishNotifications = async () => {
                 targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
             }
 
+            if (book.sourceKey) targetUrl += `${targetUrl.includes('?') ? '&' : '?'}sourceKey=${encodeURIComponent(book.sourceKey)}`
             const notification = {
                 id,
                 title,
@@ -856,6 +861,8 @@ export const replenishNotifications = async () => {
                 actionTypeId: '',
                 extra: {
                     bookId: book.id,
+                bookTitle: book.title,
+                sourceKey: book.sourceKey,
                     pageId: randomPage,
                     isAI,
                     url: targetUrl
@@ -1063,6 +1070,8 @@ export const sendTestNotification = async (selectedBookIds: number[]) => {
         targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
     }
 
+    if (book.sourceKey) targetUrl += `${targetUrl.includes('?') ? '&' : '?'}sourceKey=${encodeURIComponent(book.sourceKey)}`
+
     if (isWeb) {
         // Timeout helper
         const withTimeout = <T>(promise: Promise<T>, ms: number, msg: string): Promise<T> => {
@@ -1152,6 +1161,8 @@ export const sendTestNotification = async (selectedBookIds: number[]) => {
                     actionTypeId: "",
                     extra: {
                         bookId: book.id,
+                bookTitle: book.title,
+                sourceKey: book.sourceKey,
                         pageId: randomContent.pageNumber,
                         url: targetUrl
                     }

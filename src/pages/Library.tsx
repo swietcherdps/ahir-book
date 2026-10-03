@@ -1,19 +1,20 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getBooks, deleteBook, updateBook, addBook, indexBookContent, offloadBook, db, type Book } from '../lib/db'
-import { processPDF, processEPUB } from '../lib/fileProcessor'
+import { getBooks, deleteBook, updateBook, addBook, offloadBook, db, type Book } from '../lib/db'
 import { Capacitor } from '@capacitor/core'
 import {
-  downloadAndInstallRisaleBook,
   fetchRisaleCatalog,
   RISALE_SERIES,
   RISALE_OSMANLICA_SERIES
 } from '../lib/risaleContent'
 import SeriesCard from '../components/SeriesCard'
 import Notes from './Notes'
-import { syncDiniBooks, verifyDownloadHash, DINI_SERIES } from '../lib/diniContent'
+import { syncDiniBooks } from '../lib/diniContent'
 import { showToast } from '../components/Toast'
 import ConfirmDialog from '../components/ConfirmDialog'
+import BookCover from '../components/BookCover'
+import { normalizeRemoteUrl } from '../lib/bookCover'
+import { downloadBook } from '../lib/downloadBook'
 
 interface SeriesDefinition {
   id: string
@@ -27,7 +28,6 @@ interface SeriesDefinition {
 
 // Define Series Metadata (with nested structure)
 const SERIES: SeriesDefinition[] = [
-  { id: 'dini-kitaplar', title: DINI_SERIES, folder: '', cover: '', parent: null, dynamicCover: true },
   {
     id: 'risale-osmanlica',
     title: RISALE_OSMANLICA_SERIES,
@@ -88,30 +88,7 @@ export default function Library() {
   const [loading, setLoading] = useState(true)
   const [showHidden, setShowHidden] = useState(false)
 
-  // Helper: Correctly encode URL segments (preserving protocol and structure)
-  const encodeUrlPath = (url: string) => {
-    try {
-      // Split into parts to avoid encoding protocol slashes (http://)
-      const parts = url.split('://');
-      const protocol = parts[0];
-      const remainder = parts[1];
-
-      if (!remainder) return encodeURI(url); // Fallback if simple path
-
-      // Split path and encode each segment
-      const encodedRemainder = remainder.split('/').map(segment => {
-        // encodeURIComponent DOES NOT encode ' ( ) * !  -- but we need them encoded for strict URL matching on GitHub Pages
-        return encodeURIComponent(segment)
-          .replace(/'/g, '%27')
-          .replace(/\(/g, '%28')
-          .replace(/\)/g, '%29');
-      }).join('/');
-
-      return `${protocol}://${encodedRemainder}`;
-    } catch (e) {
-      return url;
-    }
-  }
+  const encodeUrlPath = normalizeRemoteUrl
 
   useEffect(() => {
     // Check initial setup
@@ -172,11 +149,12 @@ export default function Library() {
 
       for (const cloudBook of CLOUD_BOOKS) {
         // Find by title and series to distinguish between same-named books in different series
-        const existingBook = existingBooks.find(b =>
-          b.title === cloudBook.title &&
-          b.isCloud &&
-          b.series === cloudBook.series
-        )
+        const candidates = existingBooks.filter(b => b.title === cloudBook.title && b.isCloud && b.series === cloudBook.series)
+        const existingBook = candidates.find(b => b.isDownloaded) || candidates[0]
+        // Keep duplicate ids readable for old links, while showing a single card.
+        for (const duplicate of candidates) {
+          if (duplicate.id !== existingBook?.id && !duplicate.isDownloaded) await updateBook(duplicate.id!, { isHidden: true })
+        }
 
         // Construct paths
         let fileUrl = ''
@@ -226,9 +204,9 @@ export default function Library() {
 
         // Normalize and Encode URL components
         // We normalize to NFC to ensure consistent representation of characters like 'ğ', 'ş', 'İ'
-        fileUrl = fileUrl.normalize('NFC').split('/').map(part => encodeURIComponent(part)).join('/').replace(/%3A/g, ':').replace(/%2F/g, '/')
+        fileUrl = normalizeRemoteUrl(fileUrl)
         if (coverUrl) {
-          coverUrl = coverUrl.normalize('NFC').split('/').map(part => encodeURIComponent(part)).join('/').replace(/%3A/g, ':').replace(/%2F/g, '/')
+          coverUrl = normalizeRemoteUrl(coverUrl)
         }
 
         if (!existingBook) {
@@ -267,7 +245,6 @@ export default function Library() {
         const { catalog } = await fetchRisaleCatalog()
         const currentBooks = await getBooks()
         const migratedLegacyIds = new Set<number>()
-        const catalogSourceKeys = new Set(catalog.books.map(book => book.sourceKey))
 
         for (const catalogBook of catalog.books) {
           const existingBook = currentBooks.find(book => book.sourceKey === catalogBook.sourceKey)
@@ -305,39 +282,31 @@ export default function Library() {
               isHidden: false
             })
           } else if (existingBook) {
-            const hasUpdate = existingBook.contentVersion !== catalogBook.version ||
-              existingBook.contentHash !== catalogBook.sha256
-            if (hasUpdate && existingBook.isDownloaded) {
-              await offloadBook(existingBook.id!)
-            }
             await updateBook(existingBook.id!, {
               ...metadata,
+              format: existingBook.isDownloaded ? existingBook.format : metadata.format,
               coverBlob: null,
-              isDownloaded: hasUpdate ? false : existingBook.isDownloaded
+              isDownloaded: existingBook.isDownloaded
             })
           } else if (matchingLegacyBook?.id) {
-            // Reuse the old record so reading progress/bookmarks keep their book id,
-            // while obsolete PDF/EPUB content and old cover artwork are removed.
-            await offloadBook(matchingLegacyBook.id)
+            // Preserve the record and installed pages used by bookmarks/notifications.
             await updateBook(matchingLegacyBook.id, {
               ...metadata,
+              format: matchingLegacyBook.isDownloaded ? matchingLegacyBook.format : metadata.format,
               coverBlob: null,
-              fileBlob: null,
-              isDownloaded: false,
-              isHidden: false
+              isDownloaded: matchingLegacyBook.isDownloaded,
+              isHidden: matchingLegacyBook.isHidden
             })
             migratedLegacyIds.add(matchingLegacyBook.id)
           }
         }
 
-        // Remove obsolete Latin placeholders and their old cover/content records.
-        // Matching records above keep their id, so progress/bookmarks are retained.
+        // Retain old identities: scheduled notifications and bookmarks still use them.
+        // Hide only superseded placeholders. Downloaded content remains readable.
         const afterSync = await getBooks()
         for (const book of afterSync) {
-          if (book.id && isLegacyLatinBook(book)) await deleteBook(book.id)
-          if (book.id && isLegacyOttomanBook(book)) await deleteBook(book.id)
-          if (book.id && book.sourceKey?.startsWith('risale-online:') && !catalogSourceKeys.has(book.sourceKey)) {
-            await deleteBook(book.id)
+          if (book.id && (isLegacyLatinBook(book) || isLegacyOttomanBook(book)) && !book.isDownloaded) {
+            await updateBook(book.id, { isHidden: true })
           }
         }
       } catch (catalogError) {
@@ -381,103 +350,17 @@ export default function Library() {
     }
   }
 
-  const performDownload = async (book: Book, viewMode: 'text' | 'pdf') => {
+  const performDownload = async (book: Book) => {
     if (!book.cloudUrl || !book.id) return
 
     try {
       setDownloadingIds(prev => [...prev, book.id!])
 
-      console.log(`Downloading book: ${book.title} from ${book.cloudUrl}`)
-
-      if (book.format === 'risale-json') {
-        await downloadAndInstallRisaleBook(book, (percent, total) => {
-          setDownloadProgress(prev => ({
-            ...prev,
-            [book.id!]: {
-              percent,
-              totalMB: ((total || book.downloadSize || 0) / (1024 * 1024)).toFixed(1)
-            }
-          }))
-        })
-        await initializeLibrary()
-        return
-      }
-
-      // Fetch the file
-      // Fetch the file with progress tracking
-      const response = await fetch(book.cloudUrl, { mode: 'cors' })
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Dosya bulunamadı (404): ${book.cloudUrl}`)
-        }
-        throw new Error(`İndirme başarısız: ${response.status} ${response.statusText}`)
-      }
-
-      const contentLength = response.headers.get('content-length')
-      const total = contentLength ? parseInt(contentLength, 10) : 0
-      const totalMB = (total / (1024 * 1024)).toFixed(1)
-
-      let loaded = 0
-      const reader = response.body?.getReader()
-      const chunks: BlobPart[] = []
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          if (value) {
-            chunks.push(value)
-            loaded += value.length
-
-            if (total > 0 && book.id) {
-              const percent = Math.round((loaded / total) * 100)
-              setDownloadProgress(prev => ({
-                ...prev,
-                [book.id!]: { percent, totalMB }
-              }))
-            }
-          }
-        }
-      }
-
-      const blob = reader ? new Blob(chunks) : await response.blob()
-      await verifyDownloadHash(blob, book.contentHash)
-
-      if (blob.size < 1000) {
-        // Suspiciously small file, might be an error page served as 200
-        console.warn('Downloaded file is very small, might be invalid:', blob.size)
-      }
-
-      // Process based on file format
-      let processed
-      if (book.format === 'epub') {
-        // Create a File object for EPUB processor (it expects File, not Blob)
-        const file = new File([blob], `${book.title}.epub`, { type: 'application/epub+zip' })
-        processed = await processEPUB(file)
-      } else {
-        // Process PDF
-        processed = await processPDF(blob, book.title)
-      }
-
-      // Index content for Reader FIRST
-      // If this fails, we shouldn't mark book as downloaded
-      await indexBookContent(book.id, processed.pages)
-
-      // Update DB with file, cover (if missing), status, and viewMode
-      // Fix: Preserve custom covers for bundled books (do not overwrite with EPUB/PDF extracted covers)
-      const hasBundledCover = book.title === 'İhya-u Ulumiddin' || book.title === 'Kuran Yolu Meali'
-      const newCoverBlob = hasBundledCover ? null : (book.coverBlob || processed.coverBlob)
-
-      await updateBook(book.id, {
-        fileBlob: blob,
-        toc: processed.toc,
-        pageCount: processed.pages.length,
-        coverBlob: newCoverBlob,
-        isDownloaded: true,
-        viewMode: viewMode
+      await downloadBook(book, (percent, total) => {
+        setDownloadProgress(prev => ({ ...prev, [book.id!]: {
+          percent, totalMB: (total / (1024 * 1024)).toFixed(1)
+        } }))
       })
-
       await initializeLibrary()
     } catch (error: any) {
       console.error('Download error:', error)
@@ -496,8 +379,7 @@ export default function Library() {
     // Automatically determine view mode
     // PDF -> 'pdf' (Original)
     // EPUB -> 'text'
-    const defaultViewMode = book.format === 'pdf' ? 'pdf' : 'text'
-    await performDownload(book, defaultViewMode)
+    await performDownload(book)
   }
 
   const handleOffload = async (book: Book) => {
@@ -551,8 +433,7 @@ export default function Library() {
         setConfirmDialog(prev => ({ ...prev, isOpen: false }))
         for (const book of seriesBooks) {
           if (book.isCloud && !book.isDownloaded) {
-            const defaultMode = seriesTitle.includes('Osmanlıca') ? 'pdf' : 'text'
-            await performDownload(book, defaultMode)
+            await performDownload(book)
           }
         }
       }
@@ -744,6 +625,7 @@ export default function Library() {
                         title={series.title}
                         count={series.count}
                         coverUrl={coverUrl}
+                        coverBook={books.find(book => book.series === series.title)}
                         onClick={() => setActiveSeries(series.title)}
                       />
                     )
@@ -755,24 +637,6 @@ export default function Library() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {displayedItems.map((book) => {
                   const isCloudNotDownloaded = book.isCloud && !book.isDownloaded
-
-                  // Determine cover source
-                  let coverSrc = ''
-                  if (book.coverBlob) {
-                    coverSrc = URL.createObjectURL(book.coverBlob)
-                  } else if (book.coverUrl) {
-                    // Use the saved cover URL from the database
-                    coverSrc = book.coverUrl
-                  } else if (book.series) {
-                    // Fallback (Legacy) - Try to construct URL for cloud cover if blob is missing
-                    let folder = SERIES.find(s => s.title === book.series)?.folder
-
-                    if (folder) {
-                      const filename = book.title + '.jpg' // Assuming jpg covers
-                      const baseUrl = Capacitor.isNativePlatform() ? 'https://swietcherdps.github.io/ahir-book/' : (import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`)
-                      coverSrc = encodeUrlPath(`${baseUrl}books/${folder}/${filename}`)
-                    }
-                  }
 
                   return (
                     <div
@@ -800,22 +664,7 @@ export default function Library() {
                       {isCloudNotDownloaded ? (
                         // Cloud Book View
                         <div className="aspect-[2/3] relative bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          {coverSrc ? (
-                            <img
-                              src={coverSrc}
-                              alt={book.title}
-                              className="w-full h-full object-cover opacity-75 group-hover:opacity-50 transition-opacity"
-                              onError={(e) => {
-                                // Fallback if image load fails
-                                (e.target as HTMLImageElement).style.display = 'none'
-                              }}
-                            />
-                          ) : (
-                            <div className="text-center p-4 opacity-50">
-                              <h3 className="font-bold text-gray-800 dark:text-white mb-2">{book.title}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">{book.author}</p>
-                            </div>
-                          )}
+                          <BookCover book={book} />
 
                           <div className="absolute inset-0 flex items-center justify-center">
                             <button
@@ -852,18 +701,7 @@ export default function Library() {
                         // Downloaded Book View
                         <Link to={`/reader/${book.id}/1`}>
                           <div className="aspect-[2/3] relative bg-gray-100 dark:bg-gray-700">
-                            {coverSrc ? (
-                              <img
-                                src={coverSrc}
-                                alt={book.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                                <h3 className="font-bold text-gray-800 dark:text-white mb-2">{book.title}</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{book.author}</p>
-                              </div>
-                            )}
+                            <BookCover book={book} />
 
                             {/* Progress Bar */}
                             {book.lastReadPage && (

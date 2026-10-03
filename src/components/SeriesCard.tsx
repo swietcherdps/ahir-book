@@ -1,13 +1,16 @@
+import BookCover from './BookCover'
+import type { Book } from '../lib/db'
 
 
 interface SeriesCardProps {
     title: string
     count: number
     coverUrl?: string
+    coverBook?: Book
     onClick: () => void
 }
 
-export default function SeriesCard({ title, count, coverUrl, onClick }: SeriesCardProps) {
+export default function SeriesCard({ title, count, coverUrl, coverBook, onClick }: SeriesCardProps) {
     return (
         <div
             onClick={onClick}
@@ -17,19 +20,7 @@ export default function SeriesCard({ title, count, coverUrl, onClick }: SeriesCa
             <div className="absolute top-0 left-0 w-24 h-6 bg-accent opacity-20 rounded-br-lg z-10" />
 
             <div className="aspect-[2/3] relative bg-gray-100 dark:bg-gray-700">
-                {coverUrl ? (
-                    <img
-                        src={coverUrl}
-                        alt={title}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <svg className="w-16 h-16 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                        </svg>
-                    </div>
-                )}
+                <BookCover book={coverBook || { title, author: null, coverBlob: null, coverUrl }} />
 
                 {/* Overlay for folder look */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">

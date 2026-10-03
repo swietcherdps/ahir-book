@@ -6,6 +6,10 @@ import { summarizeText } from '../lib/ai'
 import { showToast } from '../components/Toast'
 import ConfirmDialog from '../components/ConfirmDialog'
 import BookNavigationPanel from '../components/BookNavigationPanel'
+import BookCover from '../components/BookCover'
+import { downloadBook } from '../lib/downloadBook'
+import { replaceBookContent } from '../lib/db'
+import { processPDF, processEPUB } from '../lib/fileProcessor'
 import { extractPdfSections, resolvePdfPage } from '../lib/bookNavigation'
 import * as pdfjsLib from 'pdfjs-dist'
 import { readerHighlightTerms } from '../lib/textHighlight'
@@ -36,6 +40,10 @@ export default function Reader() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalPages, setTotalPages] = useState(0)
+  const [contentUnavailable, setContentUnavailable] = useState(false)
+  const [installing, setInstalling] = useState(false)
+  const [installProgress, setInstallProgress] = useState(0)
+  const [contentRevision, setContentRevision] = useState(0)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [showBookNavigation, setShowBookNavigation] = useState(false)
@@ -122,25 +130,6 @@ export default function Reader() {
     if (!hasSeenOnboarding) {
       // Small delay to ensure render is complete
       setTimeout(() => setShowOnboarding(true), 1000)
-    }
-  }, [])
-
-  // Fix: Hide broken images globally
-  useEffect(() => {
-    const handleImageError = (event: Event) => {
-      const img = event.target as HTMLImageElement
-      if (img && img.tagName === 'IMG') {
-        // Hide the broken image icon
-        img.style.display = 'none'
-        console.log('Broken image hidden:', img.src)
-      }
-    }
-
-    // Capture phase is required for error events which don't bubble
-    document.addEventListener('error', handleImageError, true)
-
-    return () => {
-      document.removeEventListener('error', handleImageError, true)
     }
   }, [])
 
@@ -317,21 +306,48 @@ export default function Reader() {
 
   // Load book content
   useEffect(() => {
+    let cancelled = false
     const loadBookContent = async () => {
       if (!bookId || !pageId) return
 
       try {
         setLoading(true)
         setError(null)
+        setBook(previous => previous?.id === Number(bookId) ? previous : null)
         // Use previewPage if available (dragging), otherwise URL param
         const targetPage = previewPage ?? parseInt(pageId)
 
         // Ensure page is valid
-        if (isNaN(targetPage) || targetPage < 1) return
+        if (!Number.isSafeInteger(targetPage) || targetPage < 1) {
+          navigate(`/reader/${bookId}/1?${searchParams.toString()}`, { replace: true })
+          return
+        }
 
         // Fetch book from db
-        const bookData = await getBook(parseInt(bookId))
+        const numericId = Number(bookId)
+        let bookData = Number.isSafeInteger(numericId) && numericId > 0 ? await getBook(numericId) : undefined
+        const sourceKey = searchParams.get('sourceKey')
+        if (!bookData && !sourceKey && searchParams.get('bookTitle')) {
+          const title = searchParams.get('bookTitle')!.toLocaleLowerCase('tr-TR')
+          const matches = (await db.books.toArray()).filter(candidate => candidate.title.toLocaleLowerCase('tr-TR') === title)
+          const quote = searchParams.get('highlight') || searchParams.get('q') || ''
+          const language = /[\u0600-\u06ff]/.test(quote) ? 'osmanlica' : 'latince'
+          const recovered = matches.length === 1 ? matches[0] : matches.find(candidate => candidate.sourceLanguage === language)
+          if (recovered?.id) {
+            navigate(`/reader/${recovered.id}/${targetPage}?${searchParams.toString()}`, { replace: true })
+            return
+          }
+        }
+        if (sourceKey && bookData?.sourceKey !== sourceKey) {
+          bookData = await db.books.where('sourceKey').equals(sourceKey).first()
+          if (bookData?.id) {
+            navigate(`/reader/${bookData.id}/${targetPage}?${searchParams.toString()}`, { replace: true })
+            return
+          }
+        }
+        if (cancelled) return
         if (!bookData) {
+          setBook(null)
           setError('Kitap bulunamadı')
           return
         }
@@ -344,7 +360,10 @@ export default function Reader() {
         // In previous logic it was derived from content count.
         // Let's get content count here for text mode
         const allPages = await db.bookContent.where('bookId').equals(parseInt(bookId)).count()
-        if (allPages > 0) setTotalPages(allPages)
+        if (cancelled) return
+        setTotalPages(allPages || bookData.pageCount || 1)
+        setContentUnavailable(allPages === 0 || (!!bookData.isCloud && !bookData.isDownloaded))
+        if (allPages === 0) { setPageText(''); setPagePlainText(''); return }
 
 
         // Load page content
@@ -353,6 +372,7 @@ export default function Reader() {
           .equals([parseInt(bookId), targetPage])
           .first()
 
+        if (cancelled) return
         if (content) {
           let text = bookData.format === 'risale-json'
             ? sanitizeRisaleHtml(content.contentText)
@@ -360,32 +380,11 @@ export default function Reader() {
 
           // EPUB Image Handling: Show cover on first page, strip other broken images
           if (bookData.format === 'epub') {
-            // If this is the first page, try to add cover image
-            if (targetPage === 1 && (bookData.coverBlob || bookData.coverUrl)) {
-              let coverSrc = ''
-              if (bookData.coverBlob) {
-                coverSrc = URL.createObjectURL(bookData.coverBlob)
-              } else if (bookData.coverUrl) {
-                coverSrc = bookData.coverUrl
-              }
-
-              if (coverSrc) {
-                // Add cover image at the beginning of content
-                const coverHtml = `<div style="text-align: center; margin-bottom: 2em;">
-                  <img src="${coverSrc}" style="max-width: 80%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" alt="Kitap Kapağı" />
-                </div>`
-
-                // Remove any existing broken cover images first
-                text = text.replace(/<img[^>]*alt=["'](Görsel Bulunamadı|Visual Not Found|cover|kapak)[^>]*>/gi, '')
-
-                // Prepend the working cover
-                text = coverHtml + text
-              }
-            }
-
+            // Cover artwork is rendered as React below; sanitizing text must not
+            // remove blob URLs and leave an empty cover element.
             // Remove all OTHER images (broken ones) but keep our cover
             // Only remove images that are NOT our cover (don't have our specific blob URL)
-            text = text.replace(/<img(?![^>]*blob:)[^>]*>/gi, (match) => {
+            text = text.replace(/<img(?![^>]*(?:blob:|data:))[^>]*>/gi, (match) => {
               // Keep images with blob: URLs (our cover) or with Kitap Kapağı alt
               if (match.includes('blob:') || match.includes('Kitap Kapağı')) {
                 return match
@@ -397,19 +396,21 @@ export default function Reader() {
           setPageText(text)
           setPagePlainText(content.plainText || content.contentText.replace(/<[^>]+>/g, ' '))
         } else {
+          setContentUnavailable(true)
           setPageText('')
           setPagePlainText('')
         }
       } catch (err: any) {
         console.error('Error loading book content:', err)
-        setError('İçerik yüklenirken hata oluştu')
+        if (!cancelled) setError('İçerik yüklenirken hata oluştu')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    loadBookContent()
-  }, [bookId, pageId, previewPage, navigate])
+    void loadBookContent()
+    return () => { cancelled = true;  }
+  }, [bookId, pageId, previewPage, navigate, searchParams, contentRevision])
 
   // Update viewMode based on book format and highlight params
   useEffect(() => {
@@ -936,7 +937,25 @@ export default function Reader() {
     }
   }
 
-  if (loading && !book) {
+  const installReaderBook = async () => {
+    if (!book?.id || installing) return
+    setInstalling(true)
+    try {
+      if (book.fileBlob && book.format !== 'risale-json') {
+        const processed = book.format === 'pdf' ? await processPDF(book.fileBlob, book.title)
+          : await processEPUB(new File([book.fileBlob], `${book.title}.epub`))
+        await replaceBookContent(book.id, processed.pages.map(page => ({ pageNumber: page.pageNumber, html: page.text, plainText: '' })), {
+          isDownloaded: true, toc: processed.toc, pageCount: processed.pages.length, coverBlob: book.coverBlob || processed.coverBlob
+        })
+      } else {
+        await downloadBook(book, percent => setInstallProgress(percent))
+      }
+      setContentRevision(revision => revision + 1)
+    } catch (error) { showToast(error instanceof Error ? error.message : 'Kitap hazırlanamadı. Lütfen tekrar deneyin.', 'error') }
+    finally { setInstalling(false); setInstallProgress(0) }
+  }
+
+  if (!book && (loading || !error)) {
     return (
       <div className="min-h-screen bg-background dark:bg-gray-900 flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin" />
@@ -955,6 +974,18 @@ export default function Reader() {
         </div>
       </div>
     )
+  }
+
+  if (contentUnavailable) {
+    return <div className="min-h-screen bg-background dark:bg-gray-900 px-6 py-12 flex flex-col items-center text-center gap-5">
+      <div className="w-40 aspect-[2/3] shadow-xl"><BookCover book={book} /></div>
+      <h1 className="text-xl font-bold dark:text-white">{book.title}</h1>
+      <p className="text-gray-600 dark:text-gray-300">{book.fileBlob ? 'Kitabın okuma verilerini yeniden hazırlayın.' : 'Okumaya devam etmek için kitabı cihazınıza indirin.'}</p>
+      {(book.cloudUrl || book.fileBlob) && <button onClick={installReaderBook} disabled={installing} className="bg-accent text-white rounded-xl px-6 py-3 disabled:opacity-60">
+        {installing ? `Hazırlanıyor… %${installProgress}` : book.fileBlob ? 'Kitabı yeniden hazırla' : 'Kitabı indir'}
+      </button>}
+      <Link to="/library" className="text-accent">Kütüphaneye dön</Link>
+    </div>
   }
 
 
@@ -1344,7 +1375,8 @@ export default function Reader() {
                     />
                   </div>
                 ) : (
-                  <>
+                  <div className="w-full max-w-4xl">
+                    {book.format === 'epub' && currentPage === 1 && <div className="w-64 max-w-[80%] aspect-[2/3] mx-auto mb-8 shadow-xl rounded-lg overflow-hidden"><BookCover book={book} /></div>}
                     <div
                       className={`reader-content break-words ${book.format === 'risale-json'
                         ? `risale-source risale-${book.sourceLanguage || 'latince'}`
@@ -1426,7 +1458,7 @@ export default function Reader() {
                     outline: none;
                   }
                 `}</style>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

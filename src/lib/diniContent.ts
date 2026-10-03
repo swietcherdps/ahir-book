@@ -1,7 +1,6 @@
 import catalog from './diniCatalog.json'
 import { db, type Book } from './db'
 
-export const DINI_SERIES = 'Dini E-Kitaplar'
 export const DINI_CONTENT_BASE_URL = import.meta.env.VITE_DINI_CONTENT_BASE_URL ||
   'https://swietcherdps.github.io/ahir-book-content/dini/'
 
@@ -13,7 +12,7 @@ export const syncDiniBooks = async () => {
       const existing = await db.books.where('sourceKey').equals(entry.sourceKey).first()
       const metadata: Partial<Book> = {
         title: entry.title, author: entry.author, format: 'pdf', isCloud: true,
-        sourceKey: entry.sourceKey, sourceUrl: entry.sourceUrl, series: DINI_SERIES,
+        sourceKey: entry.sourceKey, sourceUrl: entry.sourceUrl, series: undefined,
         cloudUrl: new URL(entry.packageUrl, DINI_CONTENT_BASE_URL).href,
         coverUrl: new URL(entry.coverUrl, DINI_CONTENT_BASE_URL).href,
         contentHash: entry.sha256, downloadSize: entry.downloadSize

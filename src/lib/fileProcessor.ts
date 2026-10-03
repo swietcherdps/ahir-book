@@ -1,6 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist'
 import ePub from 'epubjs'
 import { extractPdfSections } from './bookNavigation'
+import { fallbackCoverBlob } from './bookCover'
+import { db } from './db'
 import { addBook, indexBookContent, checkStorageQuota, type BookSection } from './db'
 
 // Set PDF.js worker to use local version from node_modules
@@ -277,28 +279,32 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
       page.cleanup()
     }
 
-    // Try to extract cover (first page as thumbnail)
+    // Skip empty flyleaves; retain the complete cover without cropping its text.
     let coverBlob: Blob | null = null
     try {
-      const firstPage = await pdf.getPage(1)
-      const viewport = firstPage.getViewport({ scale: 0.5 })
-      const canvas = document.createElement('canvas')
-      canvas.width = viewport.width
-      canvas.height = viewport.height
-      const context = canvas.getContext('2d')!
-
-      await firstPage.render({
-        canvasContext: context,
-        viewport: viewport,
-        canvas: canvas
-      }).promise
-
-      coverBlob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.8)
-      })
+      for (let number = 1; number <= Math.min(5, pdf.numPages); number++) {
+        const page = await pdf.getPage(number)
+        const viewport = page.getViewport({ scale: 900 / page.getViewport({ scale: 1 }).height })
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.ceil(viewport.width)
+        canvas.height = Math.ceil(viewport.height)
+        const context = canvas.getContext('2d')!
+        await page.render({ canvasContext: context, viewport, canvas }).promise
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+        let ink = 0, sampled = 0
+        for (let index = 0; index < pixels.length; index += 64) {
+          sampled++
+          if (pixels[index] < 230 || pixels[index + 1] < 230 || pixels[index + 2] < 230) ink++
+        }
+        page.cleanup()
+        if (ink / sampled < 0.01) continue
+        coverBlob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+        if (coverBlob) break
+      }
     } catch (error) {
       console.warn('Could not extract PDF cover:', error)
     }
+    coverBlob ||= fallbackCoverBlob(title, author)
 
     return {
       title,
@@ -335,7 +341,15 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
       const coverUrl = await book.coverUrl()
       if (coverUrl) {
         const response = await fetch(coverUrl)
-        coverBlob = await response.blob()
+        if (response.ok) {
+          const candidate = await response.blob()
+          // Verify artwork rather than saving an HTML 404 page as a cover.
+          if (candidate.size) {
+            const image = await createImageBitmap(candidate)
+            if (image.width > 0 && image.height > 0) coverBlob = candidate
+            image.close()
+          }
+        }
       }
     } catch (error) {
       console.warn('Could not extract EPUB cover:', error)
@@ -458,6 +472,13 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
                   }
 
                   if (imgBlob) {
+                    if (!coverBlob && pageNumber === 1 && imgBlob.type.startsWith('image/')) {
+                      try {
+                        const image = await createImageBitmap(imgBlob)
+                        if (image.width >= 100 && image.height >= 100) coverBlob = imgBlob
+                        image.close()
+                      } catch { /* A decorative or invalid image is not a cover. */ }
+                    }
                     // Convert blob to base64
                     const reader = new FileReader()
                     const base64 = await new Promise<string>((resolve) => {
@@ -661,6 +682,8 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
       pages.push({ pageNumber: 1, text: '<p>EPUB içeriği okunamadı.</p>' })
     }
 
+    coverBlob ||= fallbackCoverBlob(title, author)
+    book.destroy()
     return {
       title,
       author,
@@ -695,13 +718,17 @@ export const importBook = async (file: File, customTitle?: string): Promise<numb
   // Process file based on type
   let processedBook: ProcessedBook
   if (extension === 'pdf') {
-    processedBook = await processPDF(file)
+    processedBook = await processPDF(file, customTitle)
   } else {
     processedBook = await processEPUB(file)
   }
 
+  if (customTitle && processedBook.coverBlob?.type === 'image/svg+xml') {
+    processedBook.coverBlob = fallbackCoverBlob(customTitle, processedBook.author)
+  }
   // Store book in IndexedDB
-  const bookId = await addBook({
+  const bookId = await db.transaction('rw', db.books, db.bookContent, async () => {
+  const id = await addBook({
     title: customTitle || processedBook.title,
     author: processedBook.author,
     coverBlob: processedBook.coverBlob,
@@ -714,7 +741,9 @@ export const importBook = async (file: File, customTitle?: string): Promise<numb
   })
 
   // Index book content for search
-  await indexBookContent(bookId as number, processedBook.pages)
+  await indexBookContent(id as number, processedBook.pages)
+  return id as number
+  })
 
-  return bookId as number
+  return bookId
 }

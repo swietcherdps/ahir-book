@@ -226,6 +226,7 @@ export const replaceBookContent = async (
   bookUpdates: Partial<Book> = {}
 ) => {
   await db.transaction('rw', [db.books, db.bookContent], async () => {
+    if (!await db.books.get(bookId)) throw new Error('Kitap kütüphaneden kaldırılmış.')
     await db.bookContent.where('bookId').equals(bookId).delete()
     await db.bookContent.bulkAdd(pages.map(page => ({
       bookId,

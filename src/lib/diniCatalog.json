@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-03T14:57:16.594Z",
+  "generatedAt": "2026-10-03T18:59:02.817Z",
   "sourceUrl": "https://www.ahmettunalilar.com/dini-e-kitaplar/",
   "permission": "Sitemiz bütün insanların istifadesi için hazırlanmıştır.\nBilgilerden, orijinaline sadık kalmak şartıyla, izin almaya gerek kalmadan, \nherkes istediği gibi alıp istifade edebilir.",
   "books": [
@@ -13,7 +13,7 @@
       "filename": "imam_Gazali-Alemlerin_Sirri.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Alemlerin_Sirri.pdf",
-      "coverUrl": "covers/imam_Gazali-Alemlerin_Sirri.jpg",
+      "coverUrl": "covers/imam_Gazali-Alemlerin_Sirri.webp",
       "downloadSize": 57288822,
       "sha256": "81f953e2eb21f49d99ac9de179bed0ef93487c6f915b07cffa46d89468de6472",
       "existingIhya": false
@@ -27,7 +27,7 @@
       "filename": "Ayetlerin_Nuzul_Sebebi.pdf",
       "format": "pdf",
       "packageUrl": "books/Ayetlerin_Nuzul_Sebebi.pdf",
-      "coverUrl": "covers/Ayetlerin_Nuzul_Sebebi.jpg",
+      "coverUrl": "covers/Ayetlerin_Nuzul_Sebebi.webp",
       "downloadSize": 17775518,
       "sha256": "b801d4801c906a6ed13f65df4af0fce05bf14bdd2162c6a6344df0a9bb0bf231",
       "existingIhya": false
@@ -41,7 +41,7 @@
       "filename": "DurrulMensur-1.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-1.pdf",
-      "coverUrl": "covers/DurrulMensur-1.jpg",
+      "coverUrl": "covers/DurrulMensur-1.webp",
       "downloadSize": 13193930,
       "sha256": "34a53f82f635296e6c404e18ee34f5917d8cb4deb0fc1f4669446cbd05212840",
       "existingIhya": false
@@ -55,7 +55,7 @@
       "filename": "DurrulMensur-2.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-2.pdf",
-      "coverUrl": "covers/DurrulMensur-2.jpg",
+      "coverUrl": "covers/DurrulMensur-2.webp",
       "downloadSize": 15415158,
       "sha256": "e1b3e85ee13a0c1716b8c38617b9421d154f3766b8a1001ee1038e79b4332973",
       "existingIhya": false
@@ -69,7 +69,7 @@
       "filename": "DurrulMensur-3.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-3.pdf",
-      "coverUrl": "covers/DurrulMensur-3.jpg",
+      "coverUrl": "covers/DurrulMensur-3.webp",
       "downloadSize": 15057793,
       "sha256": "d06e79c5b973ab9180a6f4a0401e14827d92cd56569b91d690fb6c22f9afad35",
       "existingIhya": false
@@ -83,7 +83,7 @@
       "filename": "DurrulMensur-4.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-4.pdf",
-      "coverUrl": "covers/DurrulMensur-4.jpg",
+      "coverUrl": "covers/DurrulMensur-4.webp",
       "downloadSize": 14996679,
       "sha256": "9fd4765988a58ae7cf0d7f39853d117f05a2be23355b232f7db4f510fa93fbe7",
       "existingIhya": false
@@ -97,7 +97,7 @@
       "filename": "DurrulMensur-5.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-5.pdf",
-      "coverUrl": "covers/DurrulMensur-5.jpg",
+      "coverUrl": "covers/DurrulMensur-5.webp",
       "downloadSize": 12927642,
       "sha256": "5abea2a0af4d095d527048cdb48def9f1d3d066e7f73d7eac74d15d8a0a6835e",
       "existingIhya": false
@@ -111,7 +111,7 @@
       "filename": "DurrulMensur-6.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-6.pdf",
-      "coverUrl": "covers/DurrulMensur-6.jpg",
+      "coverUrl": "covers/DurrulMensur-6.webp",
       "downloadSize": 15635148,
       "sha256": "1a44f812ac1054c44bf9150be0ef934d5cf11d32b8c3363bb9934364b8e7cdd4",
       "existingIhya": false
@@ -125,7 +125,7 @@
       "filename": "DurrulMensur-7.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-7.pdf",
-      "coverUrl": "covers/DurrulMensur-7.jpg",
+      "coverUrl": "covers/DurrulMensur-7.webp",
       "downloadSize": 14963045,
       "sha256": "d279fe63c6f581a1c61ffc7ad7fff8a616f57e3624e2534d2347c60e5c4cfc81",
       "existingIhya": false
@@ -139,7 +139,7 @@
       "filename": "DurrulMensur-8.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-8.pdf",
-      "coverUrl": "covers/DurrulMensur-8.jpg",
+      "coverUrl": "covers/DurrulMensur-8.webp",
       "downloadSize": 13229313,
       "sha256": "9e89495ef65910839690ac66f45472065af8e192fc29470addeffdf84f9f578d",
       "existingIhya": false
@@ -153,7 +153,7 @@
       "filename": "DurrulMensur-9.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-9.pdf",
-      "coverUrl": "covers/DurrulMensur-9.jpg",
+      "coverUrl": "covers/DurrulMensur-9.webp",
       "downloadSize": 14080578,
       "sha256": "00b63825fdf52dfee1b07226ac7847f65571a546e094aae364a17fa0900d4e52",
       "existingIhya": false
@@ -167,7 +167,7 @@
       "filename": "DurrulMensur-10.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-10.pdf",
-      "coverUrl": "covers/DurrulMensur-10.jpg",
+      "coverUrl": "covers/DurrulMensur-10.webp",
       "downloadSize": 15701571,
       "sha256": "5d382ac9ea4581f3dda6c4997152c98749857eed7867ac8fb941dcfc649950ff",
       "existingIhya": false
@@ -181,7 +181,7 @@
       "filename": "DurrulMensur-11.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-11.pdf",
-      "coverUrl": "covers/DurrulMensur-11.jpg",
+      "coverUrl": "covers/DurrulMensur-11.webp",
       "downloadSize": 16236424,
       "sha256": "47deeaa4a9d81f4cdda79b12ac8b48ce994a83164c7090557bd639d3d56872ad",
       "existingIhya": false
@@ -195,7 +195,7 @@
       "filename": "DurrulMensur-12.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-12.pdf",
-      "coverUrl": "covers/DurrulMensur-12.jpg",
+      "coverUrl": "covers/DurrulMensur-12.webp",
       "downloadSize": 14753478,
       "sha256": "e074961fd7fbdd24ca74f0e7bc6af9ee759b113e22dbfffce35c2209a1ffded9",
       "existingIhya": false
@@ -209,7 +209,7 @@
       "filename": "DurrulMensur-13.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-13.pdf",
-      "coverUrl": "covers/DurrulMensur-13.jpg",
+      "coverUrl": "covers/DurrulMensur-13.webp",
       "downloadSize": 15548020,
       "sha256": "3e146fffbf22966ed2c196293c27cc79ab6067dddd51cbf03304c1d880ec4496",
       "existingIhya": false
@@ -223,7 +223,7 @@
       "filename": "DurrulMensur-14.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-14.pdf",
-      "coverUrl": "covers/DurrulMensur-14.jpg",
+      "coverUrl": "covers/DurrulMensur-14.webp",
       "downloadSize": 15148376,
       "sha256": "51d9840aa58723b128452cbc5e2530e3d6d23b0740bc5556680b43db313ce2b7",
       "existingIhya": false
@@ -237,7 +237,7 @@
       "filename": "DurrulMensur-15.pdf",
       "format": "pdf",
       "packageUrl": "books/DurrulMensur-15.pdf",
-      "coverUrl": "covers/DurrulMensur-15.jpg",
+      "coverUrl": "covers/DurrulMensur-15.webp",
       "downloadSize": 15778872,
       "sha256": "c4acbe119a37e700ac7d5acc02e3fcf40490d99659ca10524de4b24da929179e",
       "existingIhya": false
@@ -251,7 +251,7 @@
       "filename": "imam_Gazali-Esmaul_Husna.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Esmaul_Husna.pdf",
-      "coverUrl": "covers/imam_Gazali-Esmaul_Husna.jpg",
+      "coverUrl": "covers/imam_Gazali-Esmaul_Husna.webp",
       "downloadSize": 67861420,
       "sha256": "62ea5d84d6f9351f18390cf85f4fc8cde454d350051074a56af78ba739d6892e",
       "existingIhya": false
@@ -265,7 +265,7 @@
       "filename": "imam_Gazali-Ey_Ogul.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Ey_Ogul.pdf",
-      "coverUrl": "covers/imam_Gazali-Ey_Ogul.jpg",
+      "coverUrl": "covers/imam_Gazali-Ey_Ogul.webp",
       "downloadSize": 15569824,
       "sha256": "90e7dfffffc948ef82eddd9a49f979e9480e6537d3d43f5daf87703f383e307f",
       "existingIhya": false
@@ -279,7 +279,7 @@
       "filename": "Mevlana-Fihi_Mafih.pdf",
       "format": "pdf",
       "packageUrl": "books/Mevlana-Fihi_Mafih.pdf",
-      "coverUrl": "covers/Mevlana-Fihi_Mafih.jpg",
+      "coverUrl": "covers/Mevlana-Fihi_Mafih.webp",
       "downloadSize": 10680074,
       "sha256": "4cb1a07ac513a289717a88cfb751ed046bbc1f624b6476da25624b287b5451ff",
       "existingIhya": false
@@ -293,7 +293,7 @@
       "filename": "Futuhul-Gayb.pdf",
       "format": "pdf",
       "packageUrl": "books/Futuhul-Gayb.pdf",
-      "coverUrl": "covers/Futuhul-Gayb.jpg",
+      "coverUrl": "covers/Futuhul-Gayb.webp",
       "downloadSize": 748493,
       "sha256": "795003fcfce2c73798cf35945eb104a6f65b733f313adda00876eb4d4dc8a9aa",
       "existingIhya": false
@@ -307,7 +307,7 @@
       "filename": "imam_Gazali-Hidayet_Rehberi.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Hidayet_Rehberi.pdf",
-      "coverUrl": "covers/imam_Gazali-Hidayet_Rehberi.jpg",
+      "coverUrl": "covers/imam_Gazali-Hidayet_Rehberi.webp",
       "downloadSize": 39663104,
       "sha256": "a070a560964a54827918d13c2cc88f15d3d8df5a99f1d87ae694fbfb278825f1",
       "existingIhya": false
@@ -321,7 +321,7 @@
       "filename": "imam_Gazali-Hikmetler_Kitabi.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Hikmetler_Kitabi.pdf",
-      "coverUrl": "covers/imam_Gazali-Hikmetler_Kitabi.jpg",
+      "coverUrl": "covers/imam_Gazali-Hikmetler_Kitabi.webp",
       "downloadSize": 25297539,
       "sha256": "b88bf97dae570ea059262774fd7328d9ed1fc0276224991ed57c56aa7030e426",
       "existingIhya": false
@@ -335,7 +335,7 @@
       "filename": "ihyau_ulumiddin_ekitap_mobi_epub.pdf",
       "format": "pdf",
       "packageUrl": "books/ihyau_ulumiddin_ekitap_mobi_epub.pdf",
-      "coverUrl": "covers/ihyau_ulumiddin_ekitap_mobi_epub.jpg",
+      "coverUrl": "covers/ihyau_ulumiddin_ekitap_mobi_epub.webp",
       "downloadSize": 5445271,
       "sha256": "13511473f0c0face1eed305f2cb5c2cd301945808f050af214aac9b1dd79aad1",
       "existingIhya": true
@@ -349,7 +349,7 @@
       "filename": "imam_Gazali-Iki_Madnun.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Iki_Madnun.pdf",
-      "coverUrl": "covers/imam_Gazali-Iki_Madnun.jpg",
+      "coverUrl": "covers/imam_Gazali-Iki_Madnun.webp",
       "downloadSize": 5449742,
       "sha256": "2f76b817ddc5555a4bfe542f5068835e5d159f767d76eface42ea1a147aa4718",
       "existingIhya": false
@@ -363,7 +363,7 @@
       "filename": "imam_Gazali-Kimya-yi_Saadet.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Kimya-yi_Saadet.pdf",
-      "coverUrl": "covers/imam_Gazali-Kimya-yi_Saadet.jpg",
+      "coverUrl": "covers/imam_Gazali-Kimya-yi_Saadet.webp",
       "downloadSize": 26600865,
       "sha256": "a63b92ceecfd369c94e87fd7c91fec188b2d5e9510c79b2d16c1052efaf980ca",
       "existingIhya": false
@@ -377,7 +377,7 @@
       "filename": "ibrahim_Hakki-Marifetname.pdf",
       "format": "pdf",
       "packageUrl": "books/ibrahim_Hakki-Marifetname.pdf",
-      "coverUrl": "covers/ibrahim_Hakki-Marifetname.jpg",
+      "coverUrl": "covers/ibrahim_Hakki-Marifetname.webp",
       "downloadSize": 169702439,
       "sha256": "b33ff49a27c0b1850c0605ad6526c03ac6f2cf4636337afe65eda9208d460b2e",
       "existingIhya": false
@@ -391,7 +391,7 @@
       "filename": "Mektubat_Tercemesi.pdf",
       "format": "pdf",
       "packageUrl": "books/Mektubat_Tercemesi.pdf",
-      "coverUrl": "covers/Mektubat_Tercemesi.jpg",
+      "coverUrl": "covers/Mektubat_Tercemesi.webp",
       "downloadSize": 1598122,
       "sha256": "93051b83f69f904d8a61db7b7bc806f468403ce2a73041e9d90408db18d58830",
       "existingIhya": false
@@ -405,7 +405,7 @@
       "filename": "imam_Gazali-Miskatul_Envar.pdf",
       "format": "pdf",
       "packageUrl": "books/imam_Gazali-Miskatul_Envar.pdf",
-      "coverUrl": "covers/imam_Gazali-Miskatul_Envar.jpg",
+      "coverUrl": "covers/imam_Gazali-Miskatul_Envar.webp",
       "downloadSize": 15400439,
       "sha256": "bf8e3bee22856ec9d67f3e9951e25697b9a082138e221cb6bbf8107a5c4c6a90",
       "existingIhya": false
@@ -419,7 +419,7 @@
       "filename": "ismail_Hakki_Bursavi-Salati_Mesis.pdf",
       "format": "pdf",
       "packageUrl": "books/ismail_Hakki_Bursavi-Salati_Mesis.pdf",
-      "coverUrl": "covers/ismail_Hakki_Bursavi-Salati_Mesis.jpg",
+      "coverUrl": "covers/ismail_Hakki_Bursavi-Salati_Mesis.webp",
       "downloadSize": 2756666,
       "sha256": "5c8bcadf04378e01657d6e3dbb2bee7681b19e2a8e1c06501d454c086d79d1bf",
       "existingIhya": false
