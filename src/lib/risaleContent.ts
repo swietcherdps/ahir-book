@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify'
 import { ungzip } from 'pako'
-import { replaceBookContent, type Book } from './db'
+import { replaceBookContent, type Book, type BookSection } from './db'
 
 export const RISALE_SERIES = 'Risale-i Nur (Latin)'
 export const RISALE_OSMANLICA_SERIES = 'Risale-i Nur (Osmanlıca)'
@@ -211,7 +211,7 @@ export const validateRisalePackage = (value: unknown, book: Book): RisalePackage
   return pkg as RisalePackage
 }
 
-export const downloadAndInstallRisaleBook = async (
+const loadRisalePackage = async (
   book: Book,
   onProgress?: (percent: number, totalBytes: number) => void
 ) => {
@@ -235,6 +235,24 @@ export const downloadAndInstallRisaleBook = async (
   }
 
   const pkg = validateRisalePackage(JSON.parse(decoded), book)
+  return { pkg, size: compressed.byteLength }
+}
+
+export const risaleSections = (pkg: RisalePackage): BookSection[] => (Array.isArray(pkg.toc) ? pkg.toc : []).flatMap(value => {
+  if (!value || typeof value !== 'object') return []
+  const item = value as { sayfa?: number; latince_baslik?: string; osmanlica_baslik?: string }
+  const title = pkg.book.writingType === 'osmanlica' ? (item.osmanlica_baslik || item.latince_baslik) : item.latince_baslik
+  if (!title || !Number.isInteger(item.sayfa) || item.sayfa! < 1 || item.sayfa! > pkg.book.pageCount) return []
+  return [{ title, pageNumber: item.sayfa!, level: 0 }]
+})
+
+export const fetchInstalledRisaleSections = async (book: Book) => risaleSections((await loadRisalePackage(book)).pkg)
+
+export const downloadAndInstallRisaleBook = async (
+  book: Book,
+  onProgress?: (percent: number, totalBytes: number) => void
+) => {
+  const { pkg, size } = await loadRisalePackage(book, onProgress)
   const pages = pkg.pages.map(page => ({
     pageNumber: page.pageNumber,
     html: sanitizeRisaleHtml(page.html),
@@ -242,11 +260,12 @@ export const downloadAndInstallRisaleBook = async (
     sourceParagraphIds: page.sourceParagraphIds
   }))
 
-  await replaceBookContent(book.id, pages, {
+  await replaceBookContent(book.id!, pages, {
     fileBlob: null,
     isDownloaded: true,
     viewMode: 'text',
-    pageCount: pkg.book.pageCount
+    pageCount: pkg.book.pageCount,
+    toc: risaleSections(pkg)
   })
-  onProgress?.(100, compressed.byteLength)
+  onProgress?.(100, size)
 }

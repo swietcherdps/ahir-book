@@ -1,5 +1,12 @@
 import Dexie, { type Table } from 'dexie'
 
+export interface BookSection {
+  title: string
+  pageNumber: number
+  level: number
+  anchor?: string
+}
+
 // Database types
 export interface Book {
   id?: number
@@ -10,6 +17,7 @@ export interface Book {
   format: 'pdf' | 'epub' | 'risale-json'
   createdAt: Date
   lastReadPage?: number
+  toc?: BookSection[]
 
   // Cloud features
   isCloud?: boolean

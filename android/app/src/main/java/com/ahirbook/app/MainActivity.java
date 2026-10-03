@@ -6,7 +6,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
 
     // Block native Android text selection menu that shows app icon
-    
+
     @Override
     public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
         return null;

@@ -5,8 +5,11 @@ import { highlightText, searchBooks, type SearchResult } from '../lib/search'
 import { summarizeText } from '../lib/ai'
 import { showToast } from '../components/Toast'
 import ConfirmDialog from '../components/ConfirmDialog'
+import BookNavigationPanel from '../components/BookNavigationPanel'
+import { extractPdfSections, resolvePdfPage } from '../lib/bookNavigation'
 import * as pdfjsLib from 'pdfjs-dist'
-import { sanitizeRisaleHtml } from '../lib/risaleContent'
+import { readerHighlightTerms } from '../lib/textHighlight'
+import { sanitizeRisaleHtml, fetchInstalledRisaleSections } from '../lib/risaleContent'
 
 interface GlossaryPopup {
   term: string
@@ -35,6 +38,9 @@ export default function Reader() {
   const [totalPages, setTotalPages] = useState(0)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [showBookNavigation, setShowBookNavigation] = useState(false)
+  const [loadingSections, setLoadingSections] = useState(false)
+  const closeBookNavigation = useCallback(() => setShowBookNavigation(false), [])
   const selectedTextRef = useRef('') // Store selection without re-render to preserve native menu
   const [showAIMenu, setShowAIMenu] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
@@ -53,6 +59,41 @@ export default function Reader() {
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [])
+
+  useEffect(() => {
+    if (!showBookNavigation || !book?.id || book.toc !== undefined || (!book.fileBlob && book.format !== 'risale-json')) return
+    let cancelled = false
+    const load = async () => {
+      setLoadingSections(true)
+      try {
+        let toc = [] as NonNullable<Book['toc']>
+        if (book.format === 'risale-json') {
+          toc = await fetchInstalledRisaleSections(book)
+        } else if (book.format === 'pdf') {
+          const pdf = await pdfjsLib.getDocument({ data: await book.fileBlob!.arrayBuffer() }).promise
+          try { toc = await extractPdfSections(pdf) } finally { await pdf.destroy() }
+        } else if (book.format === 'epub') {
+          const { processEPUB } = await import('../lib/fileProcessor')
+          const result = await processEPUB(new File([book.fileBlob!], `${book.title}.epub`))
+          toc = result.toc
+        }
+        await db.books.update(book.id!, { toc })
+        if (!cancelled) setBook(previous => previous && previous.id === book.id ? { ...previous, toc } : previous)
+      } catch (error) {
+        console.error('Bölümler yüklenemedi:', error)
+        if (!cancelled) showToast('Bölümler yüklenemedi; tekrar deneyebilirsiniz.', 'error')
+      } finally { if (!cancelled) setLoadingSections(false) }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [showBookNavigation, book?.id, book?.toc])
+
+  useEffect(() => {
+    const anchor = searchParams.get('anchor')
+    if (!anchor || loading) return
+    const timer = setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ block: 'center' }), 100)
+    return () => clearTimeout(timer)
+  }, [searchParams, pageText, loading])
 
   // Immersive Mode & Slider State
   const [showControls, setShowControls] = useState(true)
@@ -111,7 +152,7 @@ export default function Reader() {
 
   const [viewMode, setViewMode] = useState<'pdf' | 'text'>(() => {
     // Check for highlight parameter from notification - force text mode from start
-    const params = new URLSearchParams(window.location.search)
+    const params = searchParams
     const highlight = params.get('q') || params.get('highlight')
     return highlight ? 'text' : 'pdf'
   })
@@ -299,7 +340,7 @@ export default function Reader() {
         if (bookData.lastReadPage) {
           // Optional: could sync read state
         }
-        // Note: totalPages is usually in bookData or computed. 
+        // Note: totalPages is usually in bookData or computed.
         // In previous logic it was derived from content count.
         // Let's get content count here for text mode
         const allPages = await db.bookContent.where('bookId').equals(parseInt(bookId)).count()
@@ -374,7 +415,7 @@ export default function Reader() {
   useEffect(() => {
     if (book) {
       // Check for highlight parameter from notification
-      const params = new URLSearchParams(location.search)
+      const params = searchParams
       const highlight = params.get('q') || params.get('highlight')
 
       // Force text mode if there's a highlight parameter
@@ -387,17 +428,17 @@ export default function Reader() {
         // We could persist this preference too if needed
       }
     }
-  }, [book])
+  }, [book, hasHighlight])
 
   // Scroll to highlight with retry mechanism
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
+    const params = searchParams
     if (params.get('q') || params.get('highlight')) {
       let attempts = 0
       const maxAttempts = 10
 
       const tryScroll = () => {
-        const mark = document.querySelector('mark')
+        const mark = document.querySelector('.reader-content mark')
         if (mark) {
           mark.scrollIntoView({ behavior: 'smooth', block: 'center' })
         } else if (attempts < maxAttempts) {
@@ -411,7 +452,7 @@ export default function Reader() {
 
       return () => { attempts = maxAttempts } // Stop retrying on cleanup
     }
-  }, [pageText, location.search])
+  }, [pageText, searchParams, viewMode, loading])
 
   // Render PDF page
   useEffect(() => {
@@ -427,9 +468,9 @@ export default function Reader() {
         const arrayBuffer = await book.fileBlob.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({
           data: arrayBuffer,
-          cMapUrl: '/cmaps/',
+          cMapUrl: `${import.meta.env.BASE_URL}cmaps/`,
           cMapPacked: true,
-          standardFontDataUrl: '/standard_fonts/'
+          standardFontDataUrl: `${import.meta.env.BASE_URL}standard_fonts/`
         }).promise
 
         if (currentPage > pdf.numPages) return
@@ -487,129 +528,39 @@ export default function Reader() {
         renderTaskRef.current = page.render(renderContext)
         await renderTaskRef.current.promise
 
-        // --- Annotation Layer Implementation ---
-        // Create annotation layer div if it doesn't exist
-        const canvasContainer = canvas.parentElement
-        if (canvasContainer) {
-          // Remove existing annotation layer
-          const existingLayer = canvasContainer.querySelector('.annotationLayer')
-          if (existingLayer) {
-            existingLayer.remove()
-          }
-
-          const annotationLayerDiv = document.createElement('div')
-          annotationLayerDiv.className = 'annotationLayer'
-          // Style to match canvas
-          annotationLayerDiv.style.setProperty('--scale-factor', `${baseScale}`)
-          annotationLayerDiv.style.left = '0'
-          annotationLayerDiv.style.top = '0'
-          annotationLayerDiv.style.right = '0'
-          annotationLayerDiv.style.bottom = '0'
-          annotationLayerDiv.style.position = 'absolute'
-
-          // Important: The annotation layer needs to be scaled to match the canvas CSS size
-          // The canvas CSS width is 100%, so we need to match that.
-          // However, pdf.js annotation layer expects exact pixel dimensions matching the viewport.
-          // We can use CSS transform to scale it down to fit the container.
-
-          // Actually, a simpler way for responsive canvas is to let pdf.js render it at full size
-          // and then use CSS to fit it.
-          // But here we are using a specific responsive approach.
-
-          canvasContainer.appendChild(annotationLayerDiv)
-
-          const annotations = await page.getAnnotations()
-
-          // We need to render the annotation layer with the SAME viewport as the canvas
-          // But since we are scaling the canvas context by DPR, and the viewport was created with baseScale,
-          // we should use the same viewport for annotations.
-
-          // However, the CSS width of the canvas is '100%'.
-          // The annotation layer div will also be '100%' width of the container.
-          // We need to ensure the internal content of the annotation layer matches the visual scale.
-
-          // PDF.js AnnotationLayerBuilder is not exposed directly in the basic API usually,
-          // but we can use pdfjsLib.AnnotationLayer.render()
-
-          const parameters = {
-            viewport: viewport.clone({ dontFlip: true }),
-            div: annotationLayerDiv,
-            annotations: annotations,
-            page: page,
-            linkService: {
-              goToDestination: (dest: any) => {
-                // Handle internal links
-                // dest is usually an array [ref, name, ...]
-                // We need to find the page index for this ref
-                // This requires loading the PDF document object which we have 'pdf'
-
-                const resolveDest = async () => {
-                  try {
-                    let explicitDest = dest
-                    if (typeof dest === 'string') {
-                      explicitDest = await pdf.getDestination(dest)
-                    }
-
-                    if (!explicitDest) return
-
-                    const ref = explicitDest[0]
-                    const pageIndex = await pdf.getPageIndex(ref)
-                    navigate(`/reader/${bookId}/${pageIndex + 1}`)
-                  } catch (e) {
-                    console.error('Link navigation failed', e)
-                  }
+        const container = canvas.parentElement
+        if (container) {
+          container.querySelector('.annotationLayer')?.remove()
+          const layer = document.createElement('div')
+          layer.className = 'annotationLayer'
+          Object.assign(layer.style, { position: 'absolute', inset: '0', pointerEvents: 'none' })
+          for (const annotation of await page.getAnnotations()) {
+            if (!annotation.rect || (!annotation.dest && !annotation.url)) continue
+            const rectangle = viewport.convertToViewportRectangle(annotation.rect)
+            const link = document.createElement('button')
+            link.type = 'button'
+            link.setAttribute('aria-label', 'Kitap bağlantısına git')
+            Object.assign(link.style, {
+              position: 'absolute', pointerEvents: 'auto', cursor: 'pointer', background: 'transparent', border: 'none',
+              left: `${Math.min(rectangle[0], rectangle[2]) / viewport.width * 100}%`,
+              top: `${Math.min(rectangle[1], rectangle[3]) / viewport.height * 100}%`,
+              width: `${Math.abs(rectangle[2] - rectangle[0]) / viewport.width * 100}%`,
+              height: `${Math.abs(rectangle[3] - rectangle[1]) / viewport.height * 100}%`
+            })
+            link.onclick = async event => {
+              event.stopPropagation()
+              try {
+                if (annotation.dest) {
+                  const target = await resolvePdfPage(pdf, annotation.dest)
+                  if (target) navigate(`/reader/${bookId}/${target}`)
+                } else if (/^https?:\/\//i.test(annotation.url)) {
+                  window.open(annotation.url, '_blank', 'noopener,noreferrer')
                 }
-                resolveDest()
-              },
-              getDestinationHash: () => '#',
-              addLinkAttributes: (link: any) => {
-                link.target = '_blank'
-                link.rel = 'noopener noreferrer'
-              }
-            } as any,
-            renderInteractiveForms: false
-          };
-
-          // Render annotations
-          // Render annotations
-          try {
-            if ((pdfjsLib as any).AnnotationLayer && typeof (pdfjsLib as any).AnnotationLayer.render === 'function') {
-              (pdfjsLib as any).AnnotationLayer.render(parameters)
-            } else {
-              // Fallback or newer API usage if needed, but for now just suppress crash
-              console.warn('AnnotationLayer.render is not available')
+              } catch { showToast('Hedef sayfa bulunamadı', 'warning') }
             }
-          } catch (e) {
-            console.warn('Failed to render annotations:', e)
+            layer.append(link)
           }
-
-          // CSS Fix for Annotation Layer scaling
-          // The annotation layer is rendered at 'viewport.width' pixels.
-          // But our container is responsive.
-          // We need to scale the annotation layer to fit the current container width.
-
-          const updateAnnotationScale = () => {
-            if (!canvasContainer || !annotationLayerDiv) return
-            const containerWidth = canvasContainer.clientWidth
-            const layerWidth = viewport.width // The width it was rendered at
-
-            if (containerWidth && layerWidth) {
-              const scale = containerWidth / layerWidth
-              annotationLayerDiv.style.transform = `scale(${scale})`
-              annotationLayerDiv.style.transformOrigin = 'top left'
-            }
-          }
-
-          // Initial scale
-          updateAnnotationScale()
-
-          // Update on resize (optional, but good for responsiveness)
-          window.addEventListener('resize', updateAnnotationScale)
-
-          // Cleanup listener
-          // We can't easily remove the listener here without extracting the function, 
-          // but since the component re-renders on resize usually or we unmount, it's okay for now.
-          // Better to use a ResizeObserver if we wanted to be perfect.
+          container.append(layer)
         }
 
       } catch (error: any) {
@@ -691,7 +642,7 @@ export default function Reader() {
 
             // Make status bar transparent so app background shows through
             // Use #00000000 for transparent (Android) or empty string/transparent keyword?
-            // #00000000 is 8-digit hex (RR GGBB AA) supported on Android 
+            // #00000000 is 8-digit hex (RR GGBB AA) supported on Android
             StatusBar.setBackgroundColor({ color: '#00000000' })
 
             // Set icon style - Dark icons for light backgrounds, Light icons for dark backgrounds
@@ -700,15 +651,15 @@ export default function Reader() {
 
             // Toggle visibility based on controls?
             // User feedback suggests they want it to match theme, implying visibility.
-            // But if we want immersive reading, we might hide it. 
+            // But if we want immersive reading, we might hide it.
             // However, hiding it usually creates a black void on some notched devices or resizes layout.
             // Let's keep it visible but transparent for "Immersive" feel without layout shifts
             if (showControls) {
               StatusBar.show()
             } else {
-              // Optional: Hide status bar for full immersion if requested, 
+              // Optional: Hide status bar for full immersion if requested,
               // BUT user complaint was about color. Keeping it visible + transparent is safer for "matching theme".
-              // Let's try only hiding if user explicitly wanted full screen, but for now 
+              // Let's try only hiding if user explicitly wanted full screen, but for now
               // keeping it visible resolves the "color mismatch" issue best (it will just be content).
               // If we do hide it: StatusBar.hide()
               // Let's stick to matching theme logic:
@@ -1164,6 +1115,15 @@ export default function Reader() {
 
   return (
     <>
+      {showBookNavigation && <BookNavigationPanel title={book.title} sections={book.toc || []}
+        bookmarks={bookmarks.filter(bookmark => bookmark.bookId === book.id).sort((a, b) => Number(a.pageId) - Number(b.pageId))}
+        currentPage={currentPage} loading={loadingSections} onClose={closeBookNavigation}
+        onNavigate={(page, anchor) => {
+          setPreviewPage(null)
+          setSliderValue(null)
+          navigate(`/reader/${bookId}/${page}${anchor ? `?anchor=${encodeURIComponent(anchor)}` : ''}`)
+          closeBookNavigation()
+        }} />}
       <div
         className="min-h-screen relative bg-background dark:bg-gray-900"
         style={{ backgroundColor: backgroundColors[backgroundColor].bg }}
@@ -1196,6 +1156,14 @@ export default function Reader() {
 
               {/* Row 2: Action Icons (Centered) */}
               <div className="flex items-center justify-center gap-4">
+                <button onClick={() => setShowBookNavigation(true)}
+                  className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10"
+                  style={{ color: backgroundColors[backgroundColor].text }}
+                  title="Kitap Bölümleri ve Yer İmleri" aria-label="Kitap Bölümleri ve Yer İmleri" aria-expanded={showBookNavigation}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth={2} d="M4 5h16M4 12h16M4 19h16" />
+                  </svg>
+                </button>
                 {/* View Mode Toggle (PDF Only) */}
                 {book?.format === 'pdf' && book?.series !== 'Risale-i Nur Osmanlıca' && (
                   <button
@@ -1283,9 +1251,9 @@ export default function Reader() {
           </div>
         </div>
 
-        {/* Search Panel - Moves down when controls hidden, or stays fixed under header? 
+        {/* Search Panel - Moves down when controls hidden, or stays fixed under header?
           Actually, search panel should probably toggle with controls or be independent.
-          Let's keep it visible if active, but maybe better inside the header area? 
+          Let's keep it visible if active, but maybe better inside the header area?
           For now, let's leave it in flow but apply padding top to content to account for header.
       */}
 
@@ -1429,7 +1397,7 @@ export default function Reader() {
                       dangerouslySetInnerHTML={{
                         __html: highlightText(
                           pageText,
-                          searchParams.get('q')?.split(',').map(k => k.trim()).filter(Boolean) || []
+                          readerHighlightTerms(searchParams, pagePlainText)
                         )
                       }}
                     />
@@ -2355,6 +2323,7 @@ export default function Reader() {
 
             // Add new content
             await db.bookContent.bulkAdd(bookContent)
+            await db.books.update(book.id, { toc: result.toc, pageCount: result.pages.length })
 
             showToast(`${result.pages.length} sayfa olarak yeniden işlendi!`, 'success')
 

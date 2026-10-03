@@ -1,4 +1,5 @@
 import { db } from './db'
+import { highlightHtml } from './textHighlight'
 
 export interface SearchResult {
   id: number
@@ -36,19 +37,7 @@ export const getHighlightColor = (index: number): string => {
 
 // Highlight matched terms in text with different colors per keyword
 export const highlightText = (text: string, keywords: string[]): string => {
-  let highlightedText = text
-
-  keywords.forEach((keyword, index) => {
-    const normalized = normalizeTurkish(keyword)
-    const color = getHighlightColor(index)
-    const regex = new RegExp(`(${normalized})`, 'gi')
-    highlightedText = highlightedText.replace(
-      regex,
-      `<mark style="background-color: ${color}; padding: 2px 4px; border-radius: 2px;">$1</mark>`
-    )
-  })
-
-  return highlightedText
+  return highlightHtml(text, keywords, getHighlightColor)
 }
 
 // Helper to strip HTML tags
@@ -128,7 +117,7 @@ export const searchBooks = async (
 
         // Extract snippet with first matched keyword
         const snippet = extractSnippet(searchableText, matchedKeywords[0])
-        const highlightedSnippet = highlightText(snippet, matchedKeywords)
+        const highlightedSnippet = highlightText(snippet.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'), matchedKeywords)
 
         results.push({
           id: content.id!,

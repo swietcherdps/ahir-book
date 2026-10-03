@@ -184,7 +184,7 @@ export default function Settings() {
       setPendingNotifications(updated)
       localStorage.setItem('web_scheduled_notifications', JSON.stringify(updated))
     } else {
-      // For mobile, we need to cancel specific ID. 
+      // For mobile, we need to cancel specific ID.
       // LocalNotifications.cancel takes an object with notifications array
       await LocalNotifications.cancel({ notifications: [{ id }] })
       loadPendingNotifications()

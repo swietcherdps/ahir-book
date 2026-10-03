@@ -1,6 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist'
 import ePub from 'epubjs'
-import { addBook, indexBookContent, checkStorageQuota } from './db'
+import { extractPdfSections } from './bookNavigation'
+import { addBook, indexBookContent, checkStorageQuota, type BookSection } from './db'
 
 // Set PDF.js worker to use local version from node_modules
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -14,6 +15,7 @@ export interface ProcessedBook {
   coverBlob: Blob | null
   fileBlob: Blob
   format: 'pdf' | 'epub'
+  toc: BookSection[]
   pages: Array<{ pageNumber: number; text: string }>
 }
 
@@ -54,9 +56,9 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
     // Configure PDF.js to use CMaps for better text extraction (crucial for Ottoman/Arabic)
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
-      cMapUrl: '/cmaps/',
+      cMapUrl: `${import.meta.env.BASE_URL}cmaps/`,
       cMapPacked: true,
-      standardFontDataUrl: '/standard_fonts/'
+      standardFontDataUrl: `${import.meta.env.BASE_URL}standard_fonts/`
     }).promise
 
     // Extract metadata
@@ -64,6 +66,8 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
     const info = metadata.info as { Title?: string; Author?: string } | undefined
     const title = customTitle || info?.Title || (fileOrBlob instanceof File ? fileOrBlob.name.replace('.pdf', '') : 'Unknown Book')
     const author = info?.Author || null
+
+    const toc = await extractPdfSections(pdf)
 
     // Extract text from all pages
     const pages: Array<{ pageNumber: number; text: string }> = []
@@ -186,7 +190,10 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
         if (lines.length > 0 && isPageNum(lines[lines.length - 1].text)) lines.pop()
       }
 
-      if (lines.length === 0) continue
+      if (lines.length === 0) {
+        pages.push({ pageNumber: i, text: 'EMPTY_PAGE_MARKER' })
+        continue
+      }
 
       // 2. Calculate Page Stats for heuristics
       const avgHeight = lines.reduce((sum, l) => sum + l.height, 0) / lines.length
@@ -296,6 +303,7 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
       coverBlob,
       fileBlob: fileOrBlob,
       format: 'pdf',
+      toc,
       pages
     }
   } catch (error) {
@@ -330,11 +338,15 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
     }
 
     // Extract text from all chapters
-    const spine = await book.loaded.spine as { items?: Array<{ href: string }> }
+    await book.loaded.spine
+    const spine = book.spine as unknown as { spineItems: Array<{ href: string }> }
+    const toc: BookSection[] = []
+    const navigation = await book.loaded.navigation
+    const sectionStarts = new Map<string, number>()
     const pages: Array<{ pageNumber: number; text: string }> = []
 
     let pageNumber = 1
-    for (const item of (spine.items || [])) {
+    for (const item of (spine.spineItems || [])) {
       try {
         const section = book.spine.get(item.href)
         if (!section) {
@@ -593,6 +605,8 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
           continue
         }
 
+        sectionStarts.set(item.href.split('#')[0], pageNumber)
+
         // Split chapter into pages by character count (read from localStorage)
         const charLimit = parseInt(localStorage.getItem('epub_char_limit') || '555')
         const splitPages = splitByCharacterCount(text, charLimit)
@@ -617,6 +631,26 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
       }
     }
 
+    type NavigationItem = { label: string; href: string; subitems?: NavigationItem[] }
+    const visitToc = (items: NavigationItem[], level: number) => {
+      for (const item of items) {
+        const [href, anchor] = item.href.split('#')
+        const section = book.spine.get(href)
+        let target = sectionStarts.get(section?.href || href)
+        if (anchor) {
+          const matching = pages.find(page => {
+            const container = document.createElement('div')
+            container.innerHTML = page.text
+            return Array.from(container.querySelectorAll('[id], [name]')).some(element => element.id === anchor || element.getAttribute('name') === anchor)
+          })
+          if (matching) target = matching.pageNumber
+        }
+        if (target) toc.push({ title: item.label.trim(), pageNumber: target, anchor, level })
+        if (item.subitems) visitToc(item.subitems, level + 1)
+      }
+    }
+    visitToc(navigation.toc, 0)
+
     // If no pages extracted, add a marker
     if (pages.length === 0) {
       console.error('No pages extracted from EPUB')
@@ -629,6 +663,7 @@ export const processEPUB = async (file: File): Promise<ProcessedBook> => {
       coverBlob,
       fileBlob: file,
       format: 'epub',
+      toc,
       pages
     }
   } catch (error) {
@@ -668,6 +703,8 @@ export const importBook = async (file: File, customTitle?: string): Promise<numb
     coverBlob: processedBook.coverBlob,
     fileBlob: processedBook.fileBlob,
     format: processedBook.format,
+    toc: processedBook.toc,
+    pageCount: processedBook.pages.length,
     createdAt: new Date(),
     isDownloaded: true  // Mark as downloaded so it appears in notification settings
   })

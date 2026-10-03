@@ -4,6 +4,8 @@ import {
   RISALE_CATALOG_CACHE_KEY,
   fetchRisaleCatalog,
   sanitizeRisaleHtml,
+  risaleSections,
+  type RisalePackage,
   validateCatalog,
   validateRisalePackage
 } from './risaleContent'
@@ -117,4 +119,18 @@ describe('Risale content', () => {
     }
     expect(() => validateRisalePackage(duplicate, { ...book, pageCount: 2 })).toThrow('tekrarlı')
   })
+  it('preserves source section destinations and ignores invalid entries', () => {
+    const pkg = { book: { pageCount: 10, writingType: 'latince' }, toc: [
+      { sayfa: 1, latince_baslik: 'Birinci Söz', osmanlica_baslik: 'سوز' },
+      { sayfa: 3, latince_baslik: 'İkinci Söz' },
+      { sayfa: 99, latince_baslik: 'Geçersiz' }, null
+    ] } as unknown as RisalePackage
+    expect(risaleSections(pkg)).toEqual([
+      { title: 'Birinci Söz', pageNumber: 1, level: 0 },
+      { title: 'İkinci Söz', pageNumber: 3, level: 0 }
+    ])
+    pkg.book.writingType = 'osmanlica'
+    expect(risaleSections(pkg)[0].title).toBe('سوز')
+  })
+
 })

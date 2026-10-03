@@ -473,7 +473,7 @@ export const scheduleNotifications = async (
         // Construct URL with highlight
         let targetUrl = `${baseUrl}#/reader/${book.id}/${randomContent.pageNumber}`
         if (originalTextForHighlight) {
-            targetUrl += `?q=${encodeURIComponent(originalTextForHighlight)}`
+            targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
         }
 
         // Use just the book title (no date in notification)
@@ -843,7 +843,7 @@ export const replenishNotifications = async () => {
             let targetUrl = `${getBaseUrl()}#/reader/${book.id}/${randomPage}`
 
             if (originalTextForHighlight) {
-                targetUrl += `?q=${encodeURIComponent(originalTextForHighlight)}`
+                targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
             }
 
             const notification = {
@@ -1060,7 +1060,7 @@ export const sendTestNotification = async (selectedBookIds: number[]) => {
     let targetUrl = `${baseUrl}#/reader/${book.id}/${randomContent.pageNumber}`
 
     if (originalTextForHighlight) {
-        targetUrl += `?q=${encodeURIComponent(originalTextForHighlight)}`
+        targetUrl += `?highlight=${encodeURIComponent(originalTextForHighlight)}`
     }
 
     if (isWeb) {

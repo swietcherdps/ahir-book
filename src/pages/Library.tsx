@@ -1,6 +1,6 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getBooks, deleteBook, updateBook, addBook, indexBookContent, offloadBook, type Book } from '../lib/db'
+import { getBooks, deleteBook, updateBook, addBook, indexBookContent, offloadBook, db, type Book } from '../lib/db'
 import { processPDF, processEPUB } from '../lib/fileProcessor'
 import { Capacitor } from '@capacitor/core'
 import {
@@ -11,6 +11,7 @@ import {
 } from '../lib/risaleContent'
 import SeriesCard from '../components/SeriesCard'
 import Notes from './Notes'
+import { syncDiniBooks, verifyDownloadHash, DINI_SERIES } from '../lib/diniContent'
 import { showToast } from '../components/Toast'
 import ConfirmDialog from '../components/ConfirmDialog'
 
@@ -26,6 +27,7 @@ interface SeriesDefinition {
 
 // Define Series Metadata (with nested structure)
 const SERIES: SeriesDefinition[] = [
+  { id: 'dini-kitaplar', title: DINI_SERIES, folder: '', cover: '', parent: null, dynamicCover: true },
   {
     id: 'risale-osmanlica',
     title: RISALE_OSMANLICA_SERIES,
@@ -157,7 +159,10 @@ export default function Library() {
     try {
       setLoading(true)
 
+      await syncDiniBooks()
+
       // 1. Sync Cloud Books to DB (as placeholders)
+      await db.transaction('rw', db.books, async () => {
       const existingBooks = await getBooks()
 
       const REMOTE_URL = 'https://swietcherdps.github.io/ahir-book/'
@@ -254,6 +259,8 @@ export default function Library() {
         }
       }
 
+      })
+
       // Sync the lightweight Risale Online catalog. A failed network request falls
       // back to the last successful catalog and never downloads book content.
       try {
@@ -341,14 +348,14 @@ export default function Library() {
       // DISABLED TEMPORARILY due to bug causing empty library
       /*
       const updatedBooks = await getBooks()
-      
+
       for (const book of updatedBooks) {
         if (book.isCloud) {
-          const stillExists = CLOUD_BOOKS.some(cb => 
-            cb.title === book.title && 
+          const stillExists = CLOUD_BOOKS.some(cb =>
+            cb.title === book.title &&
             cb.series === book.series
           )
-          
+
           if (!stillExists) {
             console.log('Removing orphan book:', book.title, book.series)
             if (book.id) await deleteBook(book.id)
@@ -434,7 +441,8 @@ export default function Library() {
         }
       }
 
-      const blob = new Blob(chunks)
+      const blob = reader ? new Blob(chunks) : await response.blob()
+      await verifyDownloadHash(blob, book.contentHash)
 
       if (blob.size < 1000) {
         // Suspiciously small file, might be an error page served as 200
@@ -463,6 +471,8 @@ export default function Library() {
 
       await updateBook(book.id, {
         fileBlob: blob,
+        toc: processed.toc,
+        pageCount: processed.pages.length,
         coverBlob: newCoverBlob,
         isDownloaded: true,
         viewMode: viewMode
