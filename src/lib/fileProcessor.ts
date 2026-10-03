@@ -61,6 +61,7 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
       standardFontDataUrl: `${import.meta.env.BASE_URL}standard_fonts/`
     }).promise
 
+    try {
     // Extract metadata
     const metadata = await pdf.getMetadata()
     const info = metadata.info as { Title?: string; Author?: string } | undefined
@@ -192,6 +193,7 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
 
       if (lines.length === 0) {
         pages.push({ pageNumber: i, text: 'EMPTY_PAGE_MARKER' })
+        page.cleanup()
         continue
       }
 
@@ -272,6 +274,7 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
         pageNumber: i,
         text: finalText
       })
+      page.cleanup()
     }
 
     // Try to extract cover (first page as thumbnail)
@@ -306,6 +309,7 @@ export const processPDF = async (fileOrBlob: File | Blob, customTitle?: string):
       toc,
       pages
     }
+    } finally { await pdf.destroy() }
   } catch (error) {
     console.error('PDF processing error:', error)
     throw new Error('PDF dosyası işlenirken hata oluştu')
