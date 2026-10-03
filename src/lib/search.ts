@@ -37,35 +37,45 @@ export const getHighlightColor = (index: number): string => {
 // Highlight matched terms in text with different colors per keyword
 export const highlightText = (text: string, keywords: string[]): string => {
   let highlightedText = text
-  
+
   keywords.forEach((keyword, index) => {
     const normalized = normalizeTurkish(keyword)
     const color = getHighlightColor(index)
     const regex = new RegExp(`(${normalized})`, 'gi')
     highlightedText = highlightedText.replace(
-      regex, 
+      regex,
       `<mark style="background-color: ${color}; padding: 2px 4px; border-radius: 2px;">$1</mark>`
     )
   })
-  
+
   return highlightedText
+}
+
+// Helper to strip HTML tags
+const stripHtml = (html: string): string => {
+  const tmp = document.createElement('DIV')
+  tmp.innerHTML = html
+  return tmp.textContent || tmp.innerText || ''
 }
 
 // Extract snippet with context around matched keyword (3 lines ~ 300 chars)
 const extractSnippet = (text: string, keyword: string, contextLength = 300): string => {
-  const normalized = normalizeTurkish(text)
+  // Strip HTML for snippet generation to avoid broken tags
+  const plainText = stripHtml(text)
+
+  const normalized = normalizeTurkish(plainText)
   const keywordNormalized = normalizeTurkish(keyword)
   const index = normalized.indexOf(keywordNormalized)
-  
-  if (index === -1) return text.substring(0, contextLength) + '...'
-  
+
+  if (index === -1) return plainText.substring(0, contextLength) + '...'
+
   const start = Math.max(0, index - contextLength)
-  const end = Math.min(text.length, index + keyword.length + contextLength)
-  
-  let snippet = text.substring(start, end)
+  const end = Math.min(plainText.length, index + keyword.length + contextLength)
+
+  let snippet = plainText.substring(start, end)
   if (start > 0) snippet = '...' + snippet
-  if (end < text.length) snippet = snippet + '...'
-  
+  if (end < plainText.length) snippet = snippet + '...'
+
   return snippet
 }
 
@@ -80,45 +90,46 @@ export const searchBooks = async (
   sortOrder: SortOrder = 'grouped' // 'grouped' = by book, 'interleaved' = mixed
 ): Promise<SearchResult[]> => {
   if (!searchQuery.trim()) return []
-  
+
   // Split by comma and trim
   const keywords = searchQuery
     .split(',')
     .map(k => k.trim())
     .filter(k => k.length > 0)
-  
+
   if (keywords.length === 0) return []
-  
+
   try {
     // Get book content (filtered by bookIds if provided)
     let allContent = await db.bookContent.toArray()
-    
+
     // Apply book filter
     if (bookIds && bookIds.length > 0) {
       allContent = allContent.filter(content => bookIds.includes(content.bookId))
     }
-    
+
     const results: SearchResult[] = []
-    
+
     // Search through content
     for (const content of allContent) {
-      const normalizedContent = normalizeTurkish(content.contentText)
-      
+      const searchableText = content.plainText || content.contentText
+      const normalizedContent = normalizeTurkish(searchableText)
+
       // Check if any keyword matches
       const matchedKeywords = keywords.filter(keyword => {
         const normalizedKeyword = normalizeTurkish(keyword)
         return normalizedContent.includes(normalizedKeyword)
       })
-      
+
       if (matchedKeywords.length > 0) {
         // Get book info
         const book = await db.books.get(content.bookId)
         if (!book) continue
-        
+
         // Extract snippet with first matched keyword
-        const snippet = extractSnippet(content.contentText, matchedKeywords[0])
+        const snippet = extractSnippet(searchableText, matchedKeywords[0])
         const highlightedSnippet = highlightText(snippet, matchedKeywords)
-        
+
         results.push({
           id: content.id!,
           bookId: content.bookId,
@@ -129,7 +140,7 @@ export const searchBooks = async (
         })
       }
     }
-    
+
     // Sort results based on order preference
     if (sortOrder === 'grouped') {
       // Group by book: all results from book 1, then book 2, etc.
@@ -144,7 +155,7 @@ export const searchBooks = async (
     } else {
       // Interleaved: alternate between books
       const resultsByBook: Record<number, SearchResult[]> = {}
-      
+
       // Group results by book
       results.forEach(result => {
         if (!resultsByBook[result.bookId]) {
@@ -152,17 +163,17 @@ export const searchBooks = async (
         }
         resultsByBook[result.bookId].push(result)
       })
-      
+
       // Sort each book's results by page number
       Object.values(resultsByBook).forEach(bookResults => {
         bookResults.sort((a, b) => a.pageNumber - b.pageNumber)
       })
-      
+
       // Interleave results
       const bookIds = Object.keys(resultsByBook).map(Number)
       const interleavedResults: SearchResult[] = []
       const maxLength = Math.max(...Object.values(resultsByBook).map(arr => arr.length))
-      
+
       for (let i = 0; i < maxLength; i++) {
         for (const bookId of bookIds) {
           const bookResults = resultsByBook[bookId]
@@ -171,17 +182,17 @@ export const searchBooks = async (
           }
         }
       }
-      
+
       // Replace results with interleaved version
       results.length = 0
       results.push(...interleavedResults)
     }
-    
+
     // Apply pagination
-    const paginatedResults = limit 
+    const paginatedResults = limit
       ? results.slice(offset, offset + limit)
       : results.slice(offset)
-    
+
     return paginatedResults
   } catch (error) {
     console.error('Search error:', error)
@@ -198,14 +209,14 @@ export const searchWithPagination = async (
   sortOrder: SortOrder = 'grouped'
 ): Promise<{ results: SearchResult[]; hasMore: boolean; total: number }> => {
   const offset = (page - 1) * pageSize
-  
+
   // Get all results to calculate total
   const allResults = await searchBooks(searchQuery, undefined, 0, bookIds, sortOrder)
   const total = allResults.length
-  
+
   // Get paginated results
   const results = allResults.slice(offset, offset + pageSize)
   const hasMore = offset + pageSize < total
-  
+
   return { results, hasMore, total }
 }

@@ -48,6 +48,14 @@ Ahir Book allows users to easily import and organize PDF and EPUB books from the
 
 ## Getting Started
 
+### Remote content catalog
+
+Risale-i Nur Latin packages are not bundled with the application. The app reads a
+small catalog and downloads only the book selected by the user. Override the
+catalog during local development with `VITE_CONTENT_CATALOG_URL`; see
+`.env.example`. The content builder lives in the separate `ahir-book-content`
+repository and public publishing is gated on written redistribution permission.
+
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm or yarn

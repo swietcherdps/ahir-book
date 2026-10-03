@@ -1,26 +1,547 @@
+/* Import Arabic Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Risale Online's publication fonts, bundled for identical offline rendering. */
+@font-face {
+  font-family: 'Risale Inter';
+  src: url('./assets/fonts/InterVariable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EKalem';
+  src: url('./assets/fonts/eKalemDuz_344.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EKalem';
+  src: url('./assets/fonts/eKalemDuz-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanzala';
+  src: url('./assets/fonts/hanzala.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* Source-faithful Risale Online page typography and alignment. */
+.reader-content.risale-source {
+  width: 100%;
+  max-width: 48rem;
+  font-family: 'Risale Inter', Inter, sans-serif;
+  line-height: 1.95 !important;
+  text-rendering: optimizeLegibility;
+}
+
+.reader-content.risale-osmanlica {
+  direction: rtl;
+  font-family: 'EKalem', 'Hanzala', serif;
+}
+
+.reader-content.risale-source .paragraf-icerik {
+  display: block;
+  margin-bottom: 1em;
+}
+
+.reader-content.risale-source .paragraf,
+.reader-content.risale-source .paragraf-hasiye {
+  font: inherit;
+  line-height: inherit;
+  margin: 0 !important;
+  text-indent: 0 !important;
+  overflow-wrap: break-word;
+}
+
+.reader-content.risale-source .paragraf {
+  font-size: 20px;
+  line-height: 1.95 !important;
+}
+
+.reader-content.risale-source .hizalama-ortali { text-align: center !important; }
+.reader-content.risale-source .hizalama-iki-yana { text-align: justify !important; }
+.reader-content.risale-source .hizalama-sag { text-align: right !important; }
+.reader-content.risale-source .hizalama-sol { text-align: left !important; }
+
+.reader-content.risale-source .OsmanlicaStandart,
+.reader-content.risale-source .Arabi {
+  font-family: 'EKalem', 'Hanzala', serif;
+}
+
+.reader-content.risale-source .OsmanlicaStandartKirmizi,
+.reader-content.risale-source .ArabiKirmizi {
+  color: #dc5a4d;
+  font-family: 'EKalem', 'Hanzala', serif;
+}
+
+.reader-content.risale-source .OsmanlicaStandartKalin,
+.reader-content.risale-source .OsmanlicaStandartKirmiziKalin,
+.reader-content.risale-source .ArabiKalin,
+.reader-content.risale-source .ArabiKirmiziKalin {
+  font-family: 'EKalem', 'Hanzala', serif;
+  font-weight: 700;
+}
+
+.reader-content.risale-source .OsmanlicaStandartKirmiziKalin,
+.reader-content.risale-source .ArabiKirmiziKalin {
+  color: #dc5a4d;
+}
+
+.reader-content.risale-source .OsmanlicaStandartUstSimge,
+.reader-content.risale-source .OsmanlicaStandartKalinUstSimge,
+.reader-content.risale-source .OsmanlicaStandartKirmiziUstSimge,
+.reader-content.risale-source .OsmanlicaStandartKirmiziKalinUstSimge,
+.reader-content.risale-source .ArabiUstSimge,
+.reader-content.risale-source .ArabiKalinUstSimge,
+.reader-content.risale-source .ArabiKirmiziKalinUstSimge,
+.reader-content.risale-source .ArabiKirmiziUstSimge {
+  font-family: 'EKalem', 'Hanzala', serif;
+  font-size: .75em;
+  vertical-align: super;
+}
+
+.reader-content.risale-source .OsmanlicaStandartKirmiziUstSimge,
+.reader-content.risale-source .OsmanlicaStandartKirmiziKalinUstSimge,
+.reader-content.risale-source .ArabiKirmiziKalinUstSimge,
+.reader-content.risale-source .ArabiKirmiziUstSimge {
+  color: #dc5a4d;
+}
+
+.reader-content.risale-source .OsmanlicaStandartKalinUstSimge,
+.reader-content.risale-source .OsmanlicaStandartKirmiziKalinUstSimge,
+.reader-content.risale-source .ArabiKalinUstSimge,
+.reader-content.risale-source .ArabiKirmiziKalinUstSimge {
+  font-weight: 700;
+}
+
+.reader-content.risale-source .Latince,
+.reader-content.risale-source .Standart {
+  font-family: 'Risale Inter', Inter, sans-serif;
+}
+
+.reader-content.risale-source .LatinceKirmizi,
+.reader-content.risale-source .LatinceKirmiziKalin,
+.reader-content.risale-source .StandartKirmizi {
+  color: #dc5a4d;
+  font-family: 'Risale Inter', Inter, sans-serif;
+}
+
+.reader-content.risale-source .LatinceKalin,
+.reader-content.risale-source .LatinceKirmiziKalin {
+  font-family: 'Risale Inter', Inter, sans-serif;
+  font-weight: 700;
+}
+
+.reader-content.risale-source .LatinceUstSimge,
+.reader-content.risale-source .LatinceKalinUstSimge,
+.reader-content.risale-source .LatinceKirmiziUstSimge,
+.reader-content.risale-source .LatinceKirmiziKalinUstSimge {
+  font-family: 'Risale Inter', Inter, sans-serif;
+  font-size: .75em;
+  vertical-align: super;
+}
+
+.reader-content.risale-source .LatinceKalinUstSimge,
+.reader-content.risale-source .LatinceKirmiziKalinUstSimge {
+  font-weight: 700;
+}
+
+.reader-content.risale-source .LatinceKirmiziUstSimge,
+.reader-content.risale-source .LatinceKirmiziKalinUstSimge {
+  color: #dc5a4d;
+}
+
+.reader-content.risale-source .yeni-satir {
+  display: block;
+  margin-block: 1em;
+}
+
+.reader-content.risale-source .paragraf-hasiyeler {
+  border-top: 1px dashed rgba(125, 111, 87, .24);
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 18px;
+}
+
+.reader-content.risale-source .paragraf-hasiye {
+  background: #fcf7f0;
+  border: 1px solid #eadfce;
+  border-radius: 18px;
+  font-size: .8em;
+  line-height: 1.8 !important;
+  padding: 14px 18px;
+}
+
+@media (max-width: 768px) {
+  .reader-content.risale-source .paragraf {
+    font-size: 18px;
+    line-height: 2 !important;
+  }
+
+  .reader-content.risale-latince .paragraf {
+    line-height: 1.95 !important;
+  }
+
+  .reader-content.risale-source .paragraf-hasiye {
+    font-size: 14px;
+  }
+}
+
+.dark .reader-content.risale-source .paragraf-hasiye {
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .14);
+}
+
+/* Safe Area Insets for Notched Devices */
+:root {
+  /* Fallback values for devices without notch or older browsers */
+  --safe-area-top: 0px;
+  --safe-area-bottom: 0px;
+  --safe-area-left: 0px;
+  --safe-area-right: 0px;
+}
+
+/* Override with actual safe area values if supported */
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+    --safe-area-right: env(safe-area-inset-right);
+  }
+}
+
+/* Safe Area Utility Classes */
+.safe-area-top {
+  /* Use max() to ensure minimum 44px for status bar on modern iPhones/Android */
+  padding-top: 44px;
+  /* Fallback for browsers that don't support max() or env() */
+  padding-top: max(44px, env(safe-area-inset-top, 44px));
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-all {
+  padding-top: max(44px, env(safe-area-inset-top, 44px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 @layer base {
   html {
     font-family: Inter, system-ui, -apple-system, sans-serif;
+    /* Prevent default tap highlight color */
+    -webkit-tap-highlight-color: transparent;
   }
-  
+
   body {
     @apply bg-background text-primary;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: none;
   }
-  
+
+  /* Disable Dragging Globally to prevent "Ghost Icon" issues */
+  /* We must apply this to root elements specifically to stop the whole page being dragged */
+  * {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    -webkit-touch-callout: none;
+    /* Disables default magnifying glass/menu on some devices which can trigger drag */
+  }
+
+  /* Force standard text selection highlight color */
+  ::selection {
+    background: rgba(59, 130, 246, 0.3);
+    /* Blue with opacity */
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background: rgba(96, 165, 250, 0.3);
+    /* Lighter blue for dark mode */
+  }
+
+  /* Allow text selection but NOT drag */
+  html,
+  body,
+  #root {
+    -webkit-user-drag: none !important;
+    user-drag: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  /* Re-enable selection for reader content */
+  .reader-content,
+  .reader-content * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   [dir="rtl"] {
     direction: rtl;
   }
-  
+
   mark {
     @apply bg-highlight;
     padding: 2px 0;
   }
-  
+
   .bg-highlight {
     background-color: #FBBF24 !important;
   }
+
+  /* Arabic Text Utility */
+  .arabic-text {
+    font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+    direction: rtl;
+    unicode-bidi: embed;
+    font-size: 1.5em;
+    /* Larger than Turkish text */
+    line-height: 1.4;
+    display: inline;
+    /* Inline flow */
+    color: #cc0000;
+    /* Red color as requested */
+    font-weight: 700;
+    /* Bold */
+    padding: 0 4px;
+    /* Slight padding */
+  }
+
+  /* Dark mode adjustment for Arabic text */
+  .dark .arabic-text {
+    color: #ff6b6b;
+    /* Lighter red for dark mode */
+  }
+
+  /* True black dark mode for AMOLED power savings */
+  .dark {
+    --tw-bg-opacity: 1;
+    background-color: #000000 !important;
+  }
+
+  .dark body {
+    background-color: #000000 !important;
+  }
+
+  /* Fix heading colors in dark mode for reader content */
+  .dark .reader-content h1,
+  .dark .reader-content h2,
+  .dark .reader-content h3,
+  .dark .reader-content h4,
+  .dark .reader-content h5,
+  .dark .reader-content h6 {
+    color: #F7FAFC !important;
+  }
+
+  /* Normalize heading sizes in reader content - prevent too large headings */
+  .reader-content h1,
+  .reader-content h2,
+  .reader-content h3 {
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+    text-align: left !important;
+  }
+
+  /* Toast slide-down animation */
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  /* EPUB Internal Links (footnotes, tefsir references) */
+  .reader-content a {
+    color: #3B82F6;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0 2px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+  }
+
+  .reader-content a:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    text-decoration: underline;
+  }
+
+  .reader-content a:active {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+
+  /* Dark mode link styling */
+  .dark .reader-content a {
+    color: #60A5FA;
+  }
+
+  .dark .reader-content a:hover {
+    background-color: rgba(96, 165, 250, 0.15);
+  }
+
+  /* EPUB Typography - Headers */
+  .reader-content h1,
+  .reader-content h2,
+  .reader-content h3 {
+    font-weight: 700;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .reader-content h1 {
+    font-size: 1.5em;
+  }
+
+  .reader-content h2 {
+    font-size: 1.35em;
+  }
+
+  .reader-content h3 {
+    font-size: 1.2em;
+  }
+
+  /* Superscript footnote numbers - larger and more visible */
+  .reader-content sup,
+  .reader-content a[href^="#"] sup,
+  .reader-content a sup {
+    font-size: 0.7em;
+    vertical-align: super;
+    color: #3B82F6;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .dark .reader-content sup {
+    color: #60A5FA;
+  }
+
+  /* Verse/footnote reference links in brackets */
+  .reader-content a[href^="#"]:not(:has(sup)) {
+    font-size: 0.85em;
+    vertical-align: super;
+    font-weight: 600;
+  }
+
+  /* Blockquotes */
+  .reader-content blockquote {
+    border-left: 3px solid #3B82F6;
+    margin: 1em 0;
+    padding-left: 1em;
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  /* Lists */
+  .reader-content ol,
+  .reader-content ul {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+  }
+
+  .reader-content li {
+    margin: 0.25em 0;
+  }
+
+  /* Text alignment classes from EPUB */
+  .reader-content .center,
+  .reader-content [style*="text-align: center"],
+  .reader-content [style*="text-align:center"] {
+    text-align: center !important;
+  }
+
+  .reader-content .right,
+  .reader-content [style*="text-align: right"],
+  .reader-content [style*="text-align:right"] {
+    text-align: right !important;
+  }
+
+  /* Horizontal rules / dividers */
+  .reader-content hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, currentColor, transparent);
+    opacity: 0.3;
+    margin: 1.5em 0;
+  }
+
+  /* Sub/sup for footnote anchors */
+  .reader-content .footnote,
+  .reader-content [id^="footnote"],
+  .reader-content [id^="note"] {
+    font-size: 0.9em;
+    border-top: 1px solid currentColor;
+    padding-top: 0.5em;
+    margin-top: 1em;
+    opacity: 0.85;
+  }
+}
+
+/* Slide Up Animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Scrollbar - Minimal and clean */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
 }

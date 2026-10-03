@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { searchBooks, type SearchResult, type SortOrder } from '../lib/search'
+import { searchBooks, type SearchResult } from '../lib/search'
 import { getBooks, type Book } from '../lib/db'
-import Navigation from '../components/Navigation'
+
 
 export default function Home() {
   const [query, setQuery] = useState('')
@@ -10,61 +10,39 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-  const loadingMoreRef = useRef(false)
-  
+  const [expandedBookId, setExpandedBookId] = useState<number | null>(null)
+
   // Filter states
   const [availableBooks, setAvailableBooks] = useState<Book[]>([])
   const [selectedBookIds, setSelectedBookIds] = useState<number[]>([])
-  const [sortOrder, setSortOrder] = useState<SortOrder>('grouped')
   const [showFilters, setShowFilters] = useState(false)
-  
-  const observer = useRef<IntersectionObserver | null>(null)
-  const lastResultRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading || loadingMoreRef.current) return
-    if (observer.current) observer.current.disconnect()
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && !loadingMoreRef.current) {
-        setPage(prevPage => prevPage + 1)
-      }
-    })
-    
-    if (node) observer.current.observe(node)
-  }, [loading, hasMore])
 
   // Load available books on mount
   useEffect(() => {
     loadAvailableBooks()
   }, [])
-  
+
   const loadAvailableBooks = async () => {
     const books = await getBooks()
-    setAvailableBooks(books)
-    // Select all books by default
-    setSelectedBookIds(books.map(b => b.id!))
+    // Only show downloaded books in filter
+    const downloadedBooks = books.filter(b => b.isDownloaded)
+    setAvailableBooks(downloadedBooks)
+    // Select all downloaded books by default
+    setSelectedBookIds(downloadedBooks.map(b => b.id!))
   }
-  
+
   // Restore search state from session storage on mount
   useEffect(() => {
     const savedState = sessionStorage.getItem('searchState')
     if (savedState) {
       try {
-        const { query: savedQuery, keywords: savedKeywords, results: savedResults, scrollY, selectedBookIds: savedBookIds, sortOrder: savedSortOrder } = JSON.parse(savedState)
+        const { query: savedQuery, keywords: savedKeywords, results: savedResults, selectedBookIds: savedBookIds, expandedBookId: savedExpandedBookId } = JSON.parse(savedState)
         setQuery(savedQuery || '')
         setKeywords(savedKeywords || [])
         setResults(savedResults || [])
         setSearched(savedResults && savedResults.length > 0)
         if (savedBookIds) setSelectedBookIds(savedBookIds)
-        if (savedSortOrder) setSortOrder(savedSortOrder)
-        
-        // Restore scroll position after DOM renders
-        if (scrollY && savedResults && savedResults.length > 0) {
-          setTimeout(() => {
-            window.scrollTo(0, scrollY)
-          }, 100)
-        }
+        if (savedExpandedBookId) setExpandedBookId(savedExpandedBookId)
       } catch (error) {
         console.error('Failed to restore search state:', error)
       }
@@ -74,16 +52,15 @@ export default function Home() {
   // Save search state to session storage whenever it changes
   useEffect(() => {
     if (searched) {
-      const scrollY = window.scrollY
-      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results, scrollY, selectedBookIds, sortOrder }))
+      sessionStorage.setItem('searchState', JSON.stringify({ query, keywords, results, selectedBookIds, expandedBookId }))
     }
-  }, [query, keywords, results, searched, selectedBookIds, sortOrder])
+  }, [query, keywords, results, searched, selectedBookIds, expandedBookId])
 
   const handleKeywordInput = (value: string) => {
     // Split by comma and parse keywords
     const parts = value.split(',')
     const lastPart = parts[parts.length - 1].trim()
-    
+
     if (parts.length > 1) {
       // Add previous keywords as tags
       const newKeywords = parts.slice(0, -1).map(k => k.trim()).filter(Boolean)
@@ -98,73 +75,58 @@ export default function Home() {
     setKeywords(keywords.filter((_, i) => i !== index))
   }
 
-  const handleSearch = async (isLoadMore = false) => {
+  const handleSearch = async () => {
     const allKeywords = [...keywords, ...query.split(',').map(k => k.trim()).filter(Boolean)]
     if (allKeywords.length === 0) return
-    
-    if (isLoadMore) {
-      loadingMoreRef.current = true
-    } else {
-      setLoading(true)
-      setSearched(true)
-      setPage(1)
-      setHasMore(true)
-    }
-    
+
+    setLoading(true)
+    setSearched(true)
+    setExpandedBookId(null)
+
     try {
       const searchQuery = allKeywords.join(',')
-      const offset = isLoadMore ? (page - 1) * 10 : 0
+      // Fetch all results to group them
       const searchResults = await searchBooks(
-        searchQuery, 
-        10, 
-        offset, 
+        searchQuery,
+        undefined, // No limit
+        0,
         selectedBookIds.length > 0 ? selectedBookIds : undefined,
-        sortOrder
+        'grouped'
       )
-      
-      if (isLoadMore) {
-        // Append new results without changing scroll position
-        setResults(prev => [...prev, ...searchResults])
-      } else {
-        setResults(searchResults)
-      }
-      
-      // If we got less than 10 results, we've reached the end
-      if (searchResults.length < 10) {
-        setHasMore(false)
-      }
+
+      setResults(searchResults)
     } catch (error) {
       console.error('Search error:', error)
     } finally {
-      if (isLoadMore) {
-        loadingMoreRef.current = false
-      } else {
-        setLoading(false)
-      }
+      setLoading(false)
     }
   }
-  
-  // Load more when page changes
-  useEffect(() => {
-    if (page > 1 && searched) {
-      handleSearch(true)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch(false)
+      handleSearch()
     }
   }
 
+  // Group results by book
+  const groupedResults = results.reduce((acc, result) => {
+    if (!acc[result.bookId]) {
+      acc[result.bookId] = {
+        bookTitle: result.bookTitle,
+        count: 0,
+        results: []
+      }
+    }
+    acc[result.bookId].count++
+    acc[result.bookId].results.push(result)
+    return acc
+  }, {} as Record<number, { bookTitle: string; count: number; results: SearchResult[] }>)
+
   return (
-    <div className="min-h-screen bg-background dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-background dark:bg-black p-4">
       <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <Navigation />
+        <header className="flex items-center justify-center mb-8">
           <h1 className="text-2xl font-bold text-primary dark:text-gray-100">Ahir Book</h1>
-          <div className="w-8" />
         </header>
 
         <div className="space-y-4">
@@ -174,10 +136,10 @@ export default function Home() {
             className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition"
           >
             <span className="font-medium text-secondary dark:text-gray-200">🔍 Arama Filtreleri</span>
-            <svg 
+            <svg
               className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -224,43 +186,6 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-
-              {/* Sort Order Filter */}
-              <div>
-                <label className="block text-sm font-semibold text-secondary mb-2">
-                  📊 Sonuç Sırası
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="sortOrder"
-                      value="grouped"
-                      checked={sortOrder === 'grouped'}
-                      onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                      className="w-4 h-4 text-accent focus:ring-accent"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Kitaplara Göre</div>
-                      <div className="text-xs text-gray-500">Önce 1. kitabın tüm sonuçları, sonra 2. kitabın...</div>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="sortOrder"
-                      value="interleaved"
-                      checked={sortOrder === 'interleaved'}
-                      onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                      className="w-4 h-4 text-accent focus:ring-accent"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Karışık</div>
-                      <div className="text-xs text-gray-500">Her kitaptan sırayla birer sonuç</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
             </div>
           )}
 
@@ -287,12 +212,12 @@ export default function Home() {
             onChange={(e) => handleKeywordInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Virgülle ayrılmış kelimeler ile ara..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
           <button
-            onClick={() => handleSearch(false)}
+            onClick={() => handleSearch()}
             disabled={loading || (keywords.length === 0 && query.trim() === '') || selectedBookIds.length === 0}
-            className="w-full bg-accent text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
+            className="w-full bg-accent text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
           >
             {loading ? 'Aranıyor...' : 'Arama'}
           </button>
@@ -300,7 +225,7 @@ export default function Home() {
 
         <div className="mt-8 space-y-4">
           <h2 className="text-lg font-semibold text-primary">Arama Sonuçları</h2>
-          
+
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
@@ -309,17 +234,30 @@ export default function Home() {
             <p className="text-gray-500">Hiç sonuç bulunamadı</p>
           ) : !searched ? (
             <p className="text-gray-500">Arama yapmak için yukarıdaki kutuyu kullanın</p>
-          ) : (
-            <>
+          ) : expandedBookId ? (
+            // Detail View
+            <div>
+              <button
+                onClick={() => setExpandedBookId(null)}
+                className="mb-4 flex items-center gap-2 text-accent hover:underline"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Tüm Sonuçlara Dön
+              </button>
+
+              <h3 className="text-xl font-bold mb-4 text-primary">
+                {groupedResults[expandedBookId].bookTitle} ({groupedResults[expandedBookId].count} sonuç)
+              </h3>
+
               <div className="space-y-3">
-                {results.map((result, index) => (
-                  <div 
-                    key={result.id} 
-                    ref={index === results.length - 1 ? lastResultRef : null}
+                {groupedResults[expandedBookId].results.map((result) => (
+                  <div
+                    key={result.id}
                     className="bg-white p-4 rounded-lg shadow-md"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-primary">{result.bookTitle}</h3>
                       <span className="text-sm text-gray-500">Sayfa {result.pageNumber}</span>
                     </div>
                     <p
@@ -327,27 +265,40 @@ export default function Home() {
                       dangerouslySetInnerHTML={{ __html: result.highlightedSnippet }}
                     />
                     <div className="flex gap-2">
-                    <Link
-                      to={`/reader/${result.bookId}/${result.pageNumber}?q=${encodeURIComponent([...keywords, query].filter(Boolean).join(','))}`}
-                      className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 transition text-sm"
-                    >
-                      Sayfaya Git
-                    </Link>
+                      <Link
+                        to={`/reader/${result.bookId}/${result.pageNumber}?q=${encodeURIComponent([...keywords, query].filter(Boolean).join(','))}`}
+                        className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-green-700 transition text-sm"
+                      >
+                        Sayfaya Git
+                      </Link>
                     </div>
                   </div>
                 ))}
               </div>
-              
-              {loading && page > 1 && (
-                <div className="flex justify-center py-4">
-                  <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-              
-              {!hasMore && results.length > 0 && (
-                <p className="text-center text-gray-500 py-4">Tüm sonuçlar gösterildi</p>
-              )}
-            </>
+            </div>
+          ) : (
+            // Summary View
+            <div className="grid gap-4">
+              {Object.entries(groupedResults).map(([bookId, data]) => (
+                <button
+                  key={bookId}
+                  onClick={() => setExpandedBookId(Number(bookId))}
+                  className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition text-left flex justify-between items-center group"
+                >
+                  <div>
+                    <h3 className="font-semibold text-primary text-lg group-hover:text-accent transition">
+                      {data.bookTitle}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {data.count} sonuç bulundu
+                    </p>
+                  </div>
+                  <svg className="w-6 h-6 text-gray-400 group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>

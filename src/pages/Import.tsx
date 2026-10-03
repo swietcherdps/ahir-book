@@ -10,18 +10,34 @@ export default function Import() {
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = async (file: File) => {
+  // Title Modal State
+  const [showTitleModal, setShowTitleModal] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [customTitle, setCustomTitle] = useState('')
+
+  const handleFileSelect = (file: File) => {
     setError(null)
     setWarning(null)
+
+    // Pre-fill title from filename (remove extension)
+    const title = file.name.replace(/\.[^/.]+$/, "")
+    setCustomTitle(title)
+    setSelectedFile(file)
+    setShowTitleModal(true)
+  }
+
+  const handleImportConfirm = async () => {
+    if (!selectedFile) return
+
+    setShowTitleModal(false)
     setUploading(true)
 
     try {
-      await importBook(file)
+      await importBook(selectedFile, customTitle)
       navigate('/library')
     } catch (err: unknown) {
       const error = err as Error
       setError(error.message || 'Dosya yüklenirken bir hata oluştu')
-    } finally {
       setUploading(false)
     }
   }
@@ -42,13 +58,13 @@ export default function Import() {
     setDragActive(false)
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
+      handleFileSelect(e.dataTransfer.files[0])
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
+      handleFileSelect(e.target.files[0])
     }
   }
 
@@ -70,9 +86,8 @@ export default function Import() {
         </header>
 
         <div
-          className={`border-4 border-dashed rounded-lg p-12 text-center transition cursor-pointer ${
-            dragActive ? 'border-accent bg-blue-50' : 'border-gray-300 hover:border-accent'
-          }`}
+          className={`border-4 border-dashed rounded-lg p-12 text-center transition cursor-pointer ${dragActive ? 'border-accent bg-blue-50' : 'border-gray-300 hover:border-accent'
+            }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -121,6 +136,47 @@ export default function Import() {
           <p className="text-sm text-gray-500">Desteklenen formatlar: PDF, EPUB</p>
           <p className="text-sm text-gray-500 mt-2">Maksimum dosya boyutu: 200MB</p>
         </div>
+
+        {/* Title Input Modal */}
+        {showTitleModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Kitap Başlığı</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Kütüphanede ve bildirimlerde görünecek ismi düzenleyebilirsiniz.
+              </p>
+
+              <input
+                type="text"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-6 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-accent outline-none"
+                placeholder="Kitap Adı"
+                autoFocus
+              />
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowTitleModal(false)
+                    setSelectedFile(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleImportConfirm}
+                  disabled={!customTitle.trim()}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                >
+                  İçe Aktar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

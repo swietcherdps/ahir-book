@@ -6,15 +6,32 @@ export interface Book {
   title: string
   author: string | null
   coverBlob: Blob | null
-  fileBlob: Blob
-  format: 'pdf' | 'epub'
+  fileBlob: Blob | null // Can be null if not downloaded yet
+  format: 'pdf' | 'epub' | 'risale-json'
   createdAt: Date
+  lastReadPage?: number
+
+  // Cloud features
+  isCloud?: boolean
+  isDownloaded?: boolean
+  isHidden?: boolean
+  cloudUrl?: string
+  coverUrl?: string // URL for the cover image (when not downloaded)
+  series?: string // Series name (e.g. "Risale-i Nur Osmanlıca")
+  viewMode?: 'text' | 'pdf' // User preference for viewing this book
+  sourceKey?: string // Stable remote identity, e.g. risale-online:17
+  sourceUrl?: string
+  contentVersion?: string
+  contentHash?: string
+  downloadSize?: number
+  pageCount?: number
+  sourceLanguage?: 'latince' | 'osmanlica'
 }
 
 export interface Bookmark {
   id?: number
   bookId: number
-  pageId: string
+  pageId: string // page number
   createdAt: Date
 }
 
@@ -23,7 +40,25 @@ export interface BookContent {
   bookId: number
   pageNumber: number
   contentText: string
-  indexedAt: Date
+  plainText?: string
+  sourceParagraphIds?: number[]
+}
+
+export interface Note {
+  id?: number
+  content: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface NoteNotificationSettings {
+  id?: number
+  enabled: boolean
+  frequency: number // minutes (1, 5, 15, 30, 60, 120, 240, 720, 1440, 10080)
+  mode: 'sequential' | 'random'
+  currentIndex: number
+  repeatEnabled: boolean
+  lastSentAt?: Date
 }
 
 // Dexie database
@@ -31,14 +66,42 @@ export class AhirBookDB extends Dexie {
   books!: Table<Book>
   bookmarks!: Table<Bookmark>
   bookContent!: Table<BookContent>
+  notes!: Table<Note>
+  noteNotificationSettings!: Table<NoteNotificationSettings>
 
   constructor() {
     super('AhirBookDB')
-    
+
+    // Version 1
     this.version(1).stores({
-      books: '++id, title, author, format, createdAt',
+      books: '++id, title, author, format, createdAt, lastReadPage',
       bookmarks: '++id, bookId, pageId, createdAt',
-      bookContent: '++id, bookId, pageNumber, [bookId+pageNumber], indexedAt'
+      bookContent: '++id, bookId, [bookId+pageNumber]'
+    })
+
+    // Version 2: Add cloud fields
+    this.version(2).stores({
+      books: '++id, title, author, format, createdAt, lastReadPage, isCloud, isHidden'
+    })
+
+    // Version 3: Add series support
+    this.version(3).stores({
+      books: '++id, title, author, format, createdAt, lastReadPage, isCloud, isHidden, series'
+    })
+
+    // Version 4: Add personal notes and notification settings
+    this.version(4).stores({
+      notes: '++id, createdAt, updatedAt',
+      noteNotificationSettings: '++id'
+    })
+
+    // Version 5: Remote, versioned content packages.
+    this.version(5).stores({
+      books: '++id, title, author, format, createdAt, lastReadPage, isCloud, isHidden, series, &sourceKey',
+      bookmarks: '++id, bookId, pageId, createdAt',
+      bookContent: '++id, bookId, [bookId+pageNumber]',
+      notes: '++id, createdAt, updatedAt',
+      noteNotificationSettings: '++id'
     })
   }
 }
@@ -133,7 +196,7 @@ export const indexBookContent = async (bookId: number, pages: Array<{ pageNumber
   try {
     // Delete existing content for this book
     await db.bookContent.where('bookId').equals(bookId).delete()
-    
+
     // Add new content
     const contentEntries = pages.map(page => ({
       bookId,
@@ -141,12 +204,37 @@ export const indexBookContent = async (bookId: number, pages: Array<{ pageNumber
       contentText: page.text,
       indexedAt: new Date()
     }))
-    
+
     await db.bookContent.bulkAdd(contentEntries)
   } catch (error) {
     console.error('Error indexing book content:', error)
     throw error
   }
+}
+
+export const replaceBookContent = async (
+  bookId: number,
+  pages: Array<{ pageNumber: number; html: string; plainText: string; sourceParagraphIds?: number[] }>,
+  bookUpdates: Partial<Book> = {}
+) => {
+  await db.transaction('rw', [db.books, db.bookContent], async () => {
+    await db.bookContent.where('bookId').equals(bookId).delete()
+    await db.bookContent.bulkAdd(pages.map(page => ({
+      bookId,
+      pageNumber: page.pageNumber,
+      contentText: page.html,
+      plainText: page.plainText,
+      sourceParagraphIds: page.sourceParagraphIds
+    })))
+    await db.books.update(bookId, bookUpdates)
+  })
+}
+
+export const offloadBook = async (bookId: number) => {
+  await db.transaction('rw', [db.books, db.bookContent], async () => {
+    await db.bookContent.where('bookId').equals(bookId).delete()
+    await db.books.update(bookId, { fileBlob: null, isDownloaded: false })
+  })
 }
 
 // Storage quota check
@@ -156,7 +244,7 @@ export const checkStorageQuota = async () => {
     const usage = estimate.usage || 0
     const quota = estimate.quota || 0
     const percentUsed = (usage / quota) * 100
-    
+
     return {
       usage,
       quota,
@@ -165,4 +253,92 @@ export const checkStorageQuota = async () => {
     }
   }
   return null
+}
+
+// Note CRUD Operations
+export const addNote = async (content: string) => {
+  try {
+    const now = new Date()
+    const id = await db.notes.add({
+      content,
+      createdAt: now,
+      updatedAt: now
+    })
+    return id
+  } catch (error) {
+    console.error('Error adding note:', error)
+    throw error
+  }
+}
+
+export const getNotes = async () => {
+  try {
+    return await db.notes.orderBy('createdAt').reverse().toArray()
+  } catch (error) {
+    console.error('Error fetching notes:', error)
+    throw error
+  }
+}
+
+export const getNote = async (id: number) => {
+  try {
+    return await db.notes.get(id)
+  } catch (error) {
+    console.error('Error fetching note:', error)
+    throw error
+  }
+}
+
+export const updateNote = async (id: number, content: string) => {
+  try {
+    await db.notes.update(id, {
+      content,
+      updatedAt: new Date()
+    })
+  } catch (error) {
+    console.error('Error updating note:', error)
+    throw error
+  }
+}
+
+export const deleteNote = async (id: number) => {
+  try {
+    await db.notes.delete(id)
+  } catch (error) {
+    console.error('Error deleting note:', error)
+    throw error
+  }
+}
+
+// Note Notification Settings
+export const getNoteNotificationSettings = async (): Promise<NoteNotificationSettings> => {
+  try {
+    const settings = await db.noteNotificationSettings.get(1)
+    if (!settings) {
+      // Initialize default settings
+      const defaultSettings: NoteNotificationSettings = {
+        id: 1,
+        enabled: false,
+        frequency: 240, // 4 hours default (in minutes)
+        mode: 'sequential',
+        currentIndex: 0,
+        repeatEnabled: true
+      }
+      await db.noteNotificationSettings.put(defaultSettings)
+      return defaultSettings
+    }
+    return settings
+  } catch (error) {
+    console.error('Error fetching note notification settings:', error)
+    throw error
+  }
+}
+
+export const updateNoteNotificationSettings = async (settings: Partial<NoteNotificationSettings>) => {
+  try {
+    await db.noteNotificationSettings.update(1, settings)
+  } catch (error) {
+    console.error('Error updating note notification settings:', error)
+    throw error
+  }
 }
