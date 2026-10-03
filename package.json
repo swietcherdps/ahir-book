@@ -1,7 +1,7 @@
 {
   "name": "ahir-book",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.9",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,16 +9,25 @@
     "build:mobile": "CAPACITOR=true tsc -b && CAPACITOR=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^6.1.0",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.3",
+    "@capacitor/clipboard": "^7.0.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/ios": "^7.4.3",
+    "@capacitor/local-notifications": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.4",
+    "@google/generative-ai": "^0.24.1",
     "dexie": "^4.2.1",
+    "dompurify": "^3.4.15",
     "epubjs": "^0.3.93",
+    "pako": "^3.0.2",
     "pdfjs-dist": "^5.4.296",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -27,7 +36,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^24.6.0",
+    "@types/pako": "^2.0.4",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
@@ -37,12 +49,14 @@
     "eslint-plugin-react-refresh": "^0.4.22",
     "gh-pages": "^6.3.0",
     "globals": "^16.4.0",
+    "jsdom": "^27.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
     "vite": "npm:rolldown-vite@7.1.14",
-    "vite-plugin-pwa": "^1.1.0"
+    "vite-plugin-pwa": "^1.1.0",
+    "vitest": "^4.0.15"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.1.14"

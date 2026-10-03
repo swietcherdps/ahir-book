@@ -10,7 +10,7 @@ export default {
       colors: {
         primary: '#2D3748',
         secondary: '#4A5568',
-        accent: '#3182CE',
+        accent: '#3A502F',
         background: '#F7FAFC',
         highlight: '#FBBF24',
       },
@@ -23,13 +23,19 @@ export default {
     },
   },
   plugins: [
-    function({ addUtilities }) {
+    function ({ addUtilities }) {
       addUtilities({
         '.pb-safe': {
           'padding-bottom': 'env(safe-area-inset-bottom)',
         },
+        '.pt-safe': {
+          'padding-top': 'max(env(safe-area-inset-top), 40px)',
+        },
         '.mb-safe': {
           'margin-bottom': 'env(safe-area-inset-bottom)',
+        },
+        '.mt-safe': {
+          'margin-top': 'env(safe-area-inset-top)',
         },
       })
     },

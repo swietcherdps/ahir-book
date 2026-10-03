@@ -1,0 +1,90 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "covers": [
+    {
+      "key": "alemler",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: midnight blue and antique gold, intricate celestial star map inside Ottoman medallion. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Âlemlerin Sırrı\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/alemler.webp"
+    },
+    {
+      "key": "ayetler",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep jade and ivory, luminous geometric arabesque arch. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Ayetlerin Nüzul Sebebi\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/ayetler.webp"
+    },
+    {
+      "key": "esma",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep emerald and gold, delicate repeating rosette illumination. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Esmâü'l Hüsna\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/esma.webp"
+    },
+    {
+      "key": "ey-ogul",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: warm terracotta and parchment, elegant illuminated manuscript border. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Ey Oğul!\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/ey-ogul.webp"
+    },
+    {
+      "key": "fihi",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep indigo and copper, lyrical Ottoman floral illumination. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Fîhi Mâ Fîh\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"Mevlânâ Celâleddîn-i Rûmî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/fihi.webp"
+    },
+    {
+      "key": "futuh",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: forest green and pale gold, luminous intricate arched geometric pattern. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Fütühül Gayb\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"Abdülkâdir Geylânî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/futuh.webp"
+    },
+    {
+      "key": "hidayet",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: petrol blue and gold, radiant ornamental medallion. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Hidâyet Rehberi\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/hidayet.webp"
+    },
+    {
+      "key": "hikmet",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: burgundy and ivory, delicate arabesque manuscript illumination. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Hikmetler Kitabı\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/hikmet.webp"
+    },
+    {
+      "key": "ihya",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep emerald and gilt gold, majestic symmetrical Ottoman medallion. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"İhyâ-u Ulûmiddîn\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/ihya.webp"
+    },
+    {
+      "key": "iki-madnun",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: midnight plum and champagne, twin concentric arabesque circles. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"İki Madnûn\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/iki-madnun.webp"
+    },
+    {
+      "key": "kimya",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: amber and deep navy, radiant gilded sunburst illumination. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Kimyâ-yı Saâdet\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/kimya.webp"
+    },
+    {
+      "key": "marifet",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: midnight blue and gold, antique astronomical astrolabe geometric illustration. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Mârifetnâme\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İbrahim Hakkı Erzurumî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/marifet.webp"
+    },
+    {
+      "key": "mektubat",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep wine and gold, delicate illuminated calligraphic manuscript motif without actual extra writing. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Mektûbât Tercemesi\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Rabbânî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/mektubat.webp"
+    },
+    {
+      "key": "miskat",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep indigo and gold, beautiful softly glowing historical brass lamp in arabesque arch. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Mişkatü'l Envâr\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Gazali\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/miskat.webp"
+    },
+    {
+      "key": "salat",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: warm ivory and jade, sophisticated Ottoman floral medallion. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Salât-ı Meşîş\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İsmail Hakkı Bursevî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/salat.webp"
+    },
+    {
+      "key": "durr",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: dark turquoise and gold, ornate symmetric geometric medallion and pearl motif. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Ed-Dürrü'l-Mensûr\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"İmam Süyûtî\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/durr.webp"
+    },
+    {
+      "key": "kuran",
+      "prompt": "Use case: stylized-concept. Asset: premium ebook front cover for a Turkish reading app. Create ONE finished flat rectangular portrait book cover, 2:3 ratio, edge-to-edge artwork, no mockup, no perspective. A beautifully crafted cohesive classical book collection: deep emerald and gold, refined Islamic geometric illuminated arch. Rich subtle paper texture, fine foil-like details, restrained balanced ornamentation, crisp generous typography. Exact Turkish title \"Kur'an Yolu Meali\" in large legible elegant serif type in the upper half, correct all diacritics; exact author \"\" small at bottom when nonempty. Art fills lower middle with substantial quiet space around text. Elegant narrow double border well inside edges. Very polished publishing quality, title reads even as a small mobile thumbnail. No additional text, no logo, no watermark, no human figures.",
+      "asset": "public/covers/kuran.webp"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "covers": [
+    {
+      "key": "risale-sozler",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep burgundy, radiant fine gold illumination. Exact title \"Sözler\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-sozler.webp"
+    },
+    {
+      "key": "risale-lemalar",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep navy, delicate floral arabesques. Exact title \"Lem'alar\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-lemalar.webp"
+    },
+    {
+      "key": "risale-sualar",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: emerald green, radiant geometric star medallion. Exact title \"Şua'lar\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-sualar.webp"
+    },
+    {
+      "key": "risale-mektubat",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep terracotta, Ottoman floral manuscript border. Exact title \"Mektûbat\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-mektubat.webp"
+    },
+    {
+      "key": "risale-zulfikar",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: petrol blue, refined symmetric geometric illumination. Exact title \"Zülfikār\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-zulfikar.webp"
+    },
+    {
+      "key": "risale-tilsimlar",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: midnight indigo, nested geometric rosette. Exact title \"Tılsımlar\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-tilsimlar.webp"
+    },
+    {
+      "key": "risale-siracun-nur",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: warm ivory and jade, soft gold radiant medallion. Exact title \"Sirac'ün-Nûr\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-siracun-nur.webp"
+    },
+    {
+      "key": "risale-asa-yi-musa",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: dark plum, intricate arabesque arch. Exact title \"Asâ-yı Mûsâ\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-asa-yi-musa.webp"
+    },
+    {
+      "key": "risale-mesnevi-i-nuriye",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: forest green, refined floral illumination. Exact title \"Mesnevî-i Nûriye\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-mesnevi-i-nuriye.webp"
+    },
+    {
+      "key": "risale-sikke-i-tasdik-i-gaybi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: dark teal, elaborate stamped gold medallion. Exact title \"Sikke-i Tasdîk-i Gaybî\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-sikke-i-tasdik-i-gaybi.webp"
+    },
+    {
+      "key": "risale-isaratul-i-caz",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: dark wine, delicate gilded manuscript illumination. Exact title \"İşârâtü'l-İ'câz\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-isaratul-i-caz.webp"
+    },
+    {
+      "key": "risale-genclik-rehberi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: ivory and indigo, understated geometric star. Exact title \"Gençlik Rehberi\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-genclik-rehberi.webp"
+    },
+    {
+      "key": "risale-hanimlar-rehberi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: dusty rose and dark burgundy, Ottoman flowers. Exact title \"Hanımlar Rehberi\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-hanimlar-rehberi.webp"
+    },
+    {
+      "key": "risale-bes-risale",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep navy, fivefold gold floral medallion. Exact title \"Beş Risâle\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-bes-risale.webp"
+    },
+    {
+      "key": "risale-barla-lahikasi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep pine green, fine geometric floral ornament. Exact title \"Barla Lâhikası\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-barla-lahikasi.webp"
+    },
+    {
+      "key": "risale-kastamonu-lahikasi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep terracotta, intricate illuminated border. Exact title \"Kastamonu Lâhikası\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-kastamonu-lahikasi.webp"
+    },
+    {
+      "key": "risale-emirdag-lahikasi",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: deep burgundy, symmetric fine gold geometric medallion. Exact title \"Emirdağ Lâhikası\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-emirdag-lahikasi.webp"
+    },
+    {
+      "key": "risale-secme-lahikalar",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: midnight teal, ornate gilt floral medallion. Exact title \"Seçme Lâhikalar\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-secme-lahikalar.webp"
+    },
+    {
+      "key": "risale-muhakemat",
+      "prompt": "Use case: stylized-concept. Asset: premium Turkish ebook front cover. Create ONE flat portrait 2:3 rectangular finished cover, edge-to-edge, no perspective or product mockup. Consistent classical collection design with textured paper, narrow inset gold double borders and exquisite restrained Ottoman geometric/floral ornament: midnight blue, balanced gold geometric rosette. Exact title \"Muhâkemât\" in LARGE exceptionally legible elegant serif typography in upper half, correct Turkish diacritics. Small exact author \"Bediüzzaman Said Nursi\" near bottom; only these two texts. A refined central illuminated ornament in lower half with generous quiet space. Luxury publishing finish, calm scholarly look, crisp detailed artwork, easy to read at small mobile thumbnail size. Avoid logos, extra text, Arabic writing, watermarks, people, busy typography.",
+      "asset": "public/covers/risale-muhakemat.webp"
+    }
+  ]
+}
